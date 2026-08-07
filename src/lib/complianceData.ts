@@ -133,7 +133,7 @@ export const INITIAL_SECTIONS: AuditSectionData[] = [
   },
   {
     key: 'health_safety',
-    title: '2. Health & Safety (Factories Ordinance)',
+    title: '2. Health & Safety',
     iconName: 'ShieldAlert',
     completionPercentage: 0,
     questions: [

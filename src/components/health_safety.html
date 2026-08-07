@@ -129,7 +129,7 @@
 
         <!-- Right: Action Buttons -->
         <div class="flex items-center space-x-2">
-          <a href="#" class="px-3 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition">
+          <a href="../../index.html" class="px-3 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition">
             <i data-lucide="arrow-left" class="w-4 h-4 text-sky-400"></i>
             <span>Back</span>
           </a>
@@ -496,11 +496,21 @@
                 <!-- Attachment List -->
                 <div id="attachments-${sub.code}" class="space-y-1.5">
                   ${sub.attachments.map((att, attIdx) => `
-                    <div class="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-slate-800 text-[11px]">
-                      <span class="truncate font-medium text-slate-300 max-w-[180px]">${att.name}</span>
-                      <button onclick="removeAttachment('${sub.code}', ${attIdx})" class="text-red-400 hover:text-red-300 ml-2">
-                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                      </button>
+                    <div class="flex flex-col p-2 rounded-lg bg-slate-900 border border-slate-800 text-[11px] relative group">
+                      <div class="flex items-center justify-between">
+                        <span class="truncate font-medium text-slate-300 max-w-[180px]">${att.name}</span>
+                        <button onclick="removeAttachment('${sub.code}', ${attIdx})" class="text-red-400 hover:text-red-300 ml-2 z-10">
+                          <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        </button>
+                      </div>
+                      ${att.previewUrl && att.type && att.type.includes('image') ? `
+                        <div class="w-full h-24 rounded border border-slate-700 overflow-hidden relative mt-1">
+                          <img src="${att.previewUrl}" class="w-full h-full object-contain group-hover:scale-105 transition duration-300">
+                          <a href="${att.previewUrl}" target="_blank" class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+                            <i data-lucide="external-link" class="w-4 h-4 text-white"></i>
+                          </a>
+                        </div>
+                      ` : ''}
                     </div>
                   `).join('')}
                 </div>
@@ -604,15 +614,52 @@
       for (const section of hsDataStore) {
         const sub = section.subsections.find(s => s.code === subCode);
         if (sub) {
-          Array.from(files).forEach(f => {
-            sub.attachments.push({
-              name: f.name,
-              size: (f.size / 1024).toFixed(1) + ' KB',
-              type: f.type
+          const promises = Array.from(files).map(f => {
+            return new Promise(resolve => {
+              const entry = {
+                name: f.name,
+                size: (f.size / 1024).toFixed(1) + ' KB',
+                type: f.type,
+                previewUrl: null
+              };
+              if (f.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = event => {
+                  const img = new Image();
+                  img.src = event.target.result;
+                  img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_SIZE = 1000;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                      if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                    } else {
+                      if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    entry.previewUrl = canvas.toDataURL('image/jpeg', 0.6);
+                    resolve(entry);
+                  };
+                  img.onerror = () => { entry.previewUrl = event.target.result; resolve(entry); };
+                };
+                reader.onerror = () => resolve(entry);
+                reader.readAsDataURL(f);
+              } else {
+                resolve(entry);
+              }
             });
           });
-          saveHealthSafetyData();
-          renderSubsections();
+
+          Promise.all(promises).then(entries => {
+            entries.forEach(e => sub.attachments.push(e));
+            saveHealthSafetyData();
+            renderSubsections();
+          });
           break;
         }
       }
@@ -639,7 +686,12 @@
 
     // SAVE TO LOCAL STORAGE
     function saveHealthSafetyData() {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(hsDataStore));
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(hsDataStore));
+      } catch (e) {
+        console.error('Storage limit reached!', e);
+        alert('Warning: Your local storage is full. Some images may not be saved permanently. Try uploading fewer or smaller images.');
+      }
     }
 
     // RECALCULATE HEALTH & SAFETY SCORE (100% Proportional System)

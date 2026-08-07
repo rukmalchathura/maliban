@@ -154,18 +154,18 @@
 
           <!-- Findings Summary Pills -->
           <div class="hidden lg:flex items-center space-x-2">
-            <div
-              class="px-2.5 py-1 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-xs font-semibold flex items-center gap-1">
+            <div onclick="scrollToCategory('CRITICAL')"
+              class="px-2.5 py-1 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-xs font-semibold flex items-center gap-1 cursor-pointer hover:bg-red-900/60 transition">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-red-400"></i>
               <span>Critical: <strong id="criticalCountText">0</strong></span>
             </div>
-            <div
-              class="px-2.5 py-1 rounded-lg bg-amber-950/50 border border-amber-800/50 text-amber-300 text-xs font-semibold flex items-center gap-1">
+            <div onclick="scrollToCategory('MAJOR')"
+              class="px-2.5 py-1 rounded-lg bg-amber-950/50 border border-amber-800/50 text-amber-300 text-xs font-semibold flex items-center gap-1 cursor-pointer hover:bg-amber-900/60 transition">
               <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-400"></i>
               <span>Major: <strong id="majorCountText">0</strong></span>
             </div>
-            <div
-              class="px-2.5 py-1 rounded-lg bg-violet-950/50 border border-violet-800/50 text-violet-300 text-xs font-semibold flex items-center gap-1">
+            <div onclick="scrollToCategory('MINOR')"
+              class="px-2.5 py-1 rounded-lg bg-violet-950/50 border border-violet-800/50 text-violet-300 text-xs font-semibold flex items-center gap-1 cursor-pointer hover:bg-violet-900/60 transition">
               <i data-lucide="info" class="w-3.5 h-3.5 text-violet-400"></i>
               <span>Minor: <strong id="minorCountText">0</strong></span>
             </div>
@@ -1019,6 +1019,13 @@
       auditState = JSON.parse(localStorage.getItem('maliban_audit_state')) || INITIAL_DATA;
     }
 
+    // Force Health & Safety title update to remove "(Factories Ordinance)"
+    auditState.sections.forEach(sec => {
+      if (sec.key === 'health_safety') {
+        sec.title = '2. Health & Safety';
+      }
+    });
+
     if (!auditState.fpSubcontractors) {
       auditState.fpSubcontractors = JSON.parse(JSON.stringify(INITIAL_DATA.fpSubcontractors));
     }
@@ -1123,6 +1130,7 @@
       // Questions List Container
       const qContainer = document.getElementById('questionsContainer');
       qContainer.innerHTML = '';
+      qContainer.id = 'questionsList';
 
       // SPECIAL HIGG FSLM STYLE RENDERER FOR FACILITY PROFILE & DEMOGRAPHICS (SECTION 1)
       if (section.key === 'facility') {
@@ -1638,6 +1646,8 @@
 
       section.questions.forEach((q) => {
         const card = document.createElement('div');
+        card.id = `q-${q.id}`;
+        card.dataset.category = q.ncCategory;
         const isNcFlaggable = ['CRITICAL', 'MAJOR', 'MINOR'].includes(q.ncCategory);
         const hasNC = q.answer === 'NO' || q.answer === 'PARTIAL';
         card.className = `glass-card glass-card-hover rounded-2xl p-5 border transition duration-200 space-y-4 ${q.answer === 'NO' && q.ncCategory === 'CRITICAL'
@@ -2380,6 +2390,22 @@
       document.getElementById('shareEmailModal').classList.add('hidden');
     }
 
+    // SCROLL TO CATEGORY
+    function scrollToCategory(category) {
+      const currentCards = document.querySelectorAll('#questionsList .glass-card');
+      for (const card of currentCards) {
+        if (card.dataset.category === category) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          card.classList.add('ring-2', 'ring-sky-500', 'ring-offset-2', 'ring-offset-slate-950');
+          setTimeout(() => {
+            card.classList.remove('ring-2', 'ring-sky-500', 'ring-offset-2', 'ring-offset-slate-950');
+          }, 2000);
+          return;
+        }
+      }
+      alert(`No ${category.toLowerCase()} questions found in the current section.`);
+    }
+
     function openSupabaseModal() {
       document.getElementById('supabaseModal').classList.remove('hidden');
     }
@@ -2494,20 +2520,70 @@
       findingsBody.innerHTML = '';
 
       auditState.sections.forEach(sec => {
+        if (sec.key === 'health_safety') {
+          const hsData = localStorage.getItem('maliban_hs_section_data_v3');
+          if (hsData) {
+            const hsParsed = JSON.parse(hsData);
+            hsParsed.forEach(hsSec => {
+              hsSec.subsections.forEach(sub => {
+                if (sub.status === 'UNANSWERED' || !sub.status) return;
+                
+                const tr = document.createElement('tr');
+                tr.style.background = (sub.status === 'NON-COMPLIANT') ? '#fef2f2' : '#ffffff';
+                
+                let qTexts = sub.questions.map(q => `• ${q.text}`).join('<br>');
+
+                let attachHtml = '';
+                if (sub.attachments && sub.attachments.length > 0) {
+                  attachHtml = '<div style="margin-top: 5px;">' + sub.attachments.filter(a => a.previewUrl).map(a => `<img src="${a.previewUrl}" style="max-width: 100%; height: auto; max-height: 100px; object-fit: contain; border-radius: 4px; border: 1px solid #e2e8f0; margin-top: 4px; display: block;" />`).join('') + '</div>';
+                }
+
+                tr.innerHTML = `
+                  <td style="padding: 5px; border: 1px solid #cbd5e1; font-weight: bold; font-family: monospace;">${sub.code}</td>
+                  <td style="padding: 5px; border: 1px solid #cbd5e1;">
+                    <strong>${sub.title}</strong><br>
+                    <div style="font-size: 10px; color: #475569; margin-top: 4px;">${qTexts}</div>
+                    ${attachHtml}
+                  </td>
+                  <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: ${sub.status === 'COMPLIANT' ? '#047857' : (sub.status === 'NON-COMPLIANT' ? '#b91c1c' : '#b45309')};">
+                    ${sub.status}
+                  </td>
+                  <td style="padding: 5px; border: 1px solid #cbd5e1;">
+                    ${sub.comment || 'N/A'}
+                  </td>
+                  <td style="padding: 5px; border: 1px solid #cbd5e1; color: #78350f;">
+                    None required
+                  </td>
+                `;
+                findingsBody.appendChild(tr);
+              });
+            });
+          }
+          return;
+        }
+
         sec.questions.forEach(q => {
           const tr = document.createElement('tr');
           tr.style.background = q.answer === 'NO' ? '#fef2f2' : '#ffffff';
+
+          let attachHtml = '';
+          if (q.attachments && q.attachments.length > 0) {
+            attachHtml = '<div style="margin-top: 5px;">' + q.attachments.filter(a => !a.isPdf && a.previewUrl).map(a => `<img src="${a.previewUrl}" style="max-width: 100%; height: auto; max-height: 100px; object-fit: contain; border-radius: 4px; border: 1px solid #e2e8f0; margin-top: 4px; display: block;" />`).join('') + '</div>';
+          }
 
           tr.innerHTML = `
             <td style="padding: 5px; border: 1px solid #cbd5e1; font-weight: bold; font-family: monospace;">${q.code}</td>
             <td style="padding: 5px; border: 1px solid #cbd5e1;">
               <strong>${q.questionText}</strong><br>
               <span style="font-size: 8px; color: #475569;">Ref: ${q.legalReference}</span>
+              ${attachHtml}
             </td>
             <td style="padding: 5px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; color: ${q.answer === 'YES' ? '#047857' : q.answer === 'NO' ? '#b91c1c' : '#b45309'};">
               ${q.answer}
             </td>
-            <td style="padding: 5px; border: 1px solid #cbd5e1;">${q.auditorNotes || 'N/A'}</td>
+            <td style="padding: 5px; border: 1px solid #cbd5e1;">
+              ${q.auditorNotes || 'N/A'}
+            </td>
             <td style="padding: 5px; border: 1px solid #cbd5e1; color: #78350f;">
               ${q.capaText ? `<div>${q.capaText}</div><div style="font-size: 8px; font-weight: bold; margin-top: 3px;">Deadline: ${q.capaDeadline || 'TBD'} | Resp: ${q.responsiblePerson || 'EHS Lead'}</div>` : 'None required'}
             </td>
