@@ -79,6 +79,8 @@
       background-color: #ef4444;
     }
   </style>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="min-h-screen flex flex-col antialiased selection:bg-sky-500 selection:text-white">
 
@@ -1066,26 +1068,89 @@
       }
     ];
 
-    // LOCAL STORAGE STATE INITIALIZATION
-    const LOCAL_STORAGE_KEY = 'maliban_hs_section_data_v10';
-    let hsDataStore;
+    // SUPABASE INTEGRATION
+    const supabaseUrl = 'YOUR_SUPABASE_URL';
+    const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const AUDIT_ID = '11111111-1111-1111-1111-111111111111'; // Must match the ID in seed.sql
 
-    const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (savedData) {
-      hsDataStore = JSON.parse(savedData);
-    } else {
-      // Initialize with default 'YES' answers and default properties for new marking scheme
-      hsDataStore = JSON.parse(JSON.stringify(HEALTH_SAFETY_DATA));
-      hsDataStore.forEach(section => {
-        section.subsections.forEach(sub => {
-          sub.questions.forEach(q => {
-            q.answer = 'YES';
-            q.severity = 'NONE';
-            q.legalFlag = false;
-            if (!q.attachments) q.attachments = [];
-          });
+    let hsDataStore = [];
+
+    async function loadDataFromSupabase() {
+      try {
+        console.log("Fetching data from Supabase...");
+        const { data: sectionsData, error: secError } = await supabase
+          .from('audit_sections')
+          .select('*')
+          .eq('audit_id', AUDIT_ID)
+          .order('section_key', { ascending: true });
+        if (secError) throw secError;
+
+        const { data: questionsData, error: qError } = await supabase
+          .from('audit_questions')
+          .select('*')
+          .eq('audit_id', AUDIT_ID)
+          .order('question_code', { ascending: true });
+        if (qError) throw qError;
+
+        const { data: attachmentsData, error: attError } = await supabase
+          .from('question_attachments')
+          .select('*');
+        if (attError) throw attError;
+
+        // Reconstruct hsDataStore
+        hsDataStore = sectionsData.map(sec => {
+          const mainPrefix = sec.section_key.split('.')[0] + '.0';
+          return {
+            code: mainPrefix,
+            title: sec.title,
+            subsections: [
+              {
+                code: sec.section_key,
+                title: sec.title,
+                comment: '',
+                attachments: [],
+                questions: questionsData
+                  .filter(q => q.section_key === sec.section_key)
+                  .map(q => ({
+                    id: q.question_code,
+                    text: q.question_text,
+                    answer: q.answer || 'UNANSWERED',
+                    severity: q.nc_category || 'NONE',
+                    legalFlag: false,
+                    comment: q.auditor_notes || '',
+                    attachments: attachmentsData
+                      .filter(a => a.question_id === q.id)
+                      .map(a => ({
+                         name: a.file_name,
+                         previewUrl: a.file_url,
+                         type: a.file_type
+                      }))
+                  }))
+              }
+            ]
+          };
         });
-      });
+
+        // Group subsections
+        const finalStore = [];
+        hsDataStore.forEach(item => {
+           let existing = finalStore.find(x => x.code === item.code);
+           if(existing) {
+             existing.subsections.push(item.subsections[0]);
+           } else {
+             finalStore.push(item);
+           }
+        });
+        hsDataStore = finalStore;
+
+        renderSidebarNav();
+        renderSubsections();
+        recalculateHsScore();
+        lucide.createIcons();
+      } catch (err) {
+        console.error("Error loading data from Supabase:", err);
+      }
     }
 
     // STATE CONTROLLERS & RENDERING
@@ -1102,10 +1167,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      renderSidebarNav();
-      renderSubsections();
-      recalculateHsScore();
-      lucide.createIcons();
+      loadDataFromSupabase();
     });
 
     // RENDER SIDEBAR NAVIGATION
@@ -1417,7 +1479,7 @@
     }
 
     // UPDATE QUESTION ANSWER (AND CONDITIONALLY RESET FLAGS)
-    function updateQuestionAnswer(subCode, questionId, value) {
+    async function updateQuestionAnswer(subCode, questionId, value) {
       for (const section of hsDataStore) {
         const sub = section.subsections.find(s => s.code === subCode);
         if (sub) {
@@ -1429,7 +1491,16 @@
               q.severity = 'NONE';
               q.legalFlag = false;
             }
-            saveHealthSafetyData();
+            
+            // Save directly to Supabase
+            supabase.from('audit_questions')
+              .update({ answer: value, nc_category: q.severity })
+              .eq('audit_id', AUDIT_ID)
+              .eq('question_code', questionId)
+              .then(({ error }) => {
+                 if (error) console.error("Error saving answer:", error);
+              });
+
             recalculateHsScore();
             renderSubsections(); // Re-render to correctly hide/show the flags block
             renderSidebarNav();
@@ -1656,13 +1727,19 @@
       }
     }
 
-    // SAVE TO LOCAL STORAGE
-    function saveHealthSafetyData() {
+    // SAVE TO SUPABASE
+    async function saveHealthSafetyData() {
       try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(hsDataStore));
+        console.log('Saving to Supabase...');
+        const { error } = await supabase
+          .from('audits')
+          .update({ status: 'IN_PROGRESS' })
+          .eq('id', AUDIT_ID);
+        if (error) throw error;
+        alert('Audit progress saved to Supabase!');
       } catch (e) {
-        console.error('Storage limit reached!', e);
-        alert('Warning: Your local storage is full. Some images may not be saved permanently. Try uploading fewer or smaller images.');
+        console.error('Error saving to Supabase:', e);
+        alert('Warning: Failed to save to Supabase.');
       }
     }
 

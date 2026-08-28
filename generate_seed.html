@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generate Seed SQL</title>
+</head>
+<body>
+    <h1>Generating seed.sql...</h1>
+    <p>Please allow the download and run the script in your Supabase SQL Editor.</p>
+
+    <!-- Import the hardcoded data from the html directly or we just embed the exact same regex logic -->
+    <script>
+      // We will fetch the local html file, parse it, and generate the SQL
+      fetch('src/components/health_safety.html')
+        .then(res => res.text())
+        .then(html => {
+            const startIdx = html.indexOf('const HEALTH_SAFETY_DATA = [');
+            const endIdx = html.indexOf('];', startIdx) + 2;
+            
+            let jsData = html.substring(startIdx, endIdx).replace('const HEALTH_SAFETY_DATA = ', '');
+            
+            // Fix keys for JSON parsing
+            jsData = jsData.replace(/(\s+)([a-zA-Z0-9_]+):/g, '$1"$2":');
+            jsData = jsData.replace(/'([^']*)'/g, '"$1"');
+            jsData = jsData.replace(/,\s*]/g, ']');
+            jsData = jsData.replace(/,\s*}/g, '}');
+
+            let HEALTH_SAFETY_DATA = JSON.parse(jsData);
+
+            const AUDIT_ID = '11111111-1111-1111-1111-111111111111';
+            let sql = `-- Seed data for Maliban Compliance Audit\n\n`;
+            sql += `-- Insert dummy audit\n`;
+            sql += `INSERT INTO public.audits (id, title, auditor_name) VALUES ('${AUDIT_ID}', 'Initial Seeded Audit', 'System Admin') ON CONFLICT DO NOTHING;\n\n`;
+
+            for (const section of HEALTH_SAFETY_DATA) {
+                sql += `-- Insert Section: ${section.code}\n`;
+                sql += `INSERT INTO public.audit_sections (audit_id, section_key, title) VALUES ('${AUDIT_ID}', '${section.code}', '${section.title.replace(/'/g, "''")}');\n\n`;
+
+                for (const sub of section.subsections) {
+                    for (const q of sub.questions) {
+                        sql += `INSERT INTO public.audit_questions (audit_id, section_key, question_code, question_text, legal_reference, max_points) VALUES `;
+                        sql += `('${AUDIT_ID}', '${section.code}', '${q.id}', '${q.text.replace(/'/g, "''")}', '', 10);\n`;
+                    }
+                }
+                sql += `\n`;
+            }
+
+            // Trigger download
+            const blob = new Blob([sql], { type: 'text/sql' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'seed.sql';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            document.body.innerHTML += "<h2 style='color:green'>Done! Download started.</h2>";
+        })
+        .catch(err => {
+            console.error(err);
+            document.body.innerHTML += "<h2 style='color:red'>Error loading data. Make sure to open this using a local web server (like Live Server).</h2>";
+        });
+    </script>
+</body>
+</html>
