@@ -119,23 +119,46 @@
             </div>
           </div>
 
-          <!-- Total Score Gauge -->
-          <div class="text-center px-4 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700">
-            <div class="text-[10px] uppercase text-slate-400 font-medium">H&amp;S Score</div>
-            <div id="hsScorePercentageText" class="text-xl font-black text-sky-400">100.0%</div>
-            <div id="hsScorePointsSubtext" class="text-[10px] text-slate-400">0 / 0 pts</div>
+          <!-- Score Gauges -->
+          <div class="flex flex-wrap gap-2">
+
+            <div class="text-center px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 min-w-[90px]">
+              <div class="text-[9px] uppercase text-slate-400 font-bold tracking-wider">Fabric Stores</div>
+              <div id="hsScoreFabric" class="text-lg font-black text-indigo-400">0.0%</div>
+              <div id="hsPtsFabric" class="text-[9px] text-slate-500 font-medium">0/0 pts</div>
+            </div>
+            <div class="text-center px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 min-w-[90px]">
+              <div class="text-[9px] uppercase text-slate-400 font-bold tracking-wider">Cutting Dept</div>
+              <div id="hsScoreCutting" class="text-lg font-black text-purple-400">0.0%</div>
+              <div id="hsPtsCutting" class="text-[9px] text-slate-500 font-medium">0/0 pts</div>
+            </div>
+            <div class="text-center px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 min-w-[90px]">
+              <div class="text-[9px] uppercase text-slate-400 font-bold tracking-wider">Sewing Dept</div>
+              <div id="hsScoreSewing" class="text-lg font-black text-pink-400">0.0%</div>
+              <div id="hsPtsSewing" class="text-[9px] text-slate-500 font-medium">0/0 pts</div>
+            </div>
+            <div class="text-center px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 min-w-[90px]">
+              <div class="text-[9px] uppercase text-slate-400 font-bold tracking-wider">Finishing Dept</div>
+              <div id="hsScoreFinishing" class="text-lg font-black text-emerald-400">0.0%</div>
+              <div id="hsPtsFinishing" class="text-[9px] text-slate-500 font-medium">0/0 pts</div>
+            </div>
+            <div class="text-center px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 min-w-[90px]">
+              <div class="text-[9px] uppercase text-slate-400 font-bold tracking-wider">Chem Stores</div>
+              <div id="hsScoreChem" class="text-lg font-black text-rose-400">0.0%</div>
+              <div id="hsPtsChem" class="text-[9px] text-slate-500 font-medium">0/0 pts</div>
+            </div>
           </div>
         </div>
 
         <!-- Right: Action Buttons -->
         <div class="flex items-center space-x-2">
-          <a href="../../index.html" class="px-3 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition">
-            <i data-lucide="arrow-left" class="w-4 h-4 text-sky-400"></i>
-            <span>Back</span>
-          </a>
+          <button onclick="generatePDFReport()" class="px-3.5 py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-1.5 shadow-lg shadow-indigo-600/30 transition">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Download Report</span>
+          </button>
           <button onclick="saveHealthSafetyData()" class="px-3.5 py-2 text-xs font-semibold rounded-lg bg-sky-600 hover:bg-sky-500 text-white flex items-center gap-1.5 shadow-lg shadow-sky-600/30 transition">
             <i data-lucide="save" class="w-4 h-4"></i>
-            <span>Save H&amp;S Audit</span>
+            <span>Save</span>
           </button>
         </div>
 
@@ -197,57 +220,153 @@
       {
         id: 'sec-1.0',
         code: '1.0',
-        title: 'General Work Environment',
+        title: 'Fabric Stores Health & Safety Inspection Checklist',
         subsections: [
           {
             code: '1.1',
-            title: 'Airborne Particulates',
+            title: 'Housekeeping & General Conditions',
             comment: '',
             attachments: [],
             questions: [
-              { id: 'hs_1.1_1', text: 'Does the facility generate airborne particulates (dust/ fibers/ mists /fumes) through its operations/ production processes?' },
-              { id: 'hs_1.1_2', text: 'Does the facility evaluate exposure to concentrations of airborne particulates (dust/ fibers/ mists /fumes) in line with legal requirements?' },
-              { id: 'hs_1.1_3', text: 'Are worker exposures to airborne particulates (e.g. dust, fibers, fumes) in line with legal requirements?' }
+              { id: 'hs_1.1_1', text: 'Floor is clean, dry, and free from dust and fabric waste.' },
+              { id: 'hs_1.1_2', text: 'Walkways are clear and properly marked.' },
+              { id: 'hs_1.1_3', text: 'Emergency exits are unobstructed.' },
+              { id: 'hs_1.1_4', text: 'Fabric rolls are stored neatly.' },
+              { id: 'hs_1.1_5', text: 'No loose materials creating trip hazards.' },
+              { id: 'hs_1.1_6', text: 'Adequate lighting throughout the store.' },
+              { id: 'hs_1.1_7', text: 'Ventilation is adequate.' }
             ]
           },
           {
             code: '1.2',
-            title: 'Temperature and Ventilation',
+            title: 'Fabric Storage',
             comment: '',
             attachments: [],
             questions: [
-              { id: 'hs_1.2_1', text: 'Are temperature and ventilation systems maintained in line with legal requirements?' },
-              { id: 'hs_1.2_2', text: 'Are facility temperature and ventilation in line with applicable legal requirements?' },
-              { id: 'hs_1.2_3', text: 'Does the facility continuously monitor and maintain a specific regulated indoor temperature?' },
-              { id: 'hs_1.2_4', text: 'If yes, what is the indoor temperature in Celsius the facility continuously maintains?' }
+              { id: 'hs_1.2_1', text: 'Fabric rolls are stacked safely.' },
+              { id: 'hs_1.2_2', text: 'Storage height is within the approved limit.' },
+              { id: 'hs_1.2_3', text: 'Heavy fabric stored on lower racks.' },
+              { id: 'hs_1.2_4', text: 'Damaged racks are not in use.' },
+              { id: 'hs_1.2_5', text: 'Rack load capacity labels are displayed.' },
+              { id: 'hs_1.2_6', text: 'Fabric is protected from moisture.' }
             ]
           },
           {
             code: '1.3',
-            title: 'Air Quality',
+            title: 'Fire Safety',
             comment: '',
             attachments: [],
             questions: [
-              { id: 'hs_1.3_1', text: 'Does the facility monitor indoor air quality in line with legal requirements?' }
+              { id: 'hs_1.3_1', text: 'Fire extinguishers are accessible.' },
+              { id: 'hs_1.3_2', text: 'Fire extinguishers inspected monthly.' },
+              { id: 'hs_1.3_3', text: 'Fire points are unobstructed.' },
+              { id: 'hs_1.3_4', text: 'Fire alarm call points accessible.' },
+              { id: 'hs_1.3_5', text: 'Emergency evacuation map displayed.' },
+              { id: 'hs_1.3_6', text: 'Emergency lighting operational.' },
+              { id: 'hs_1.3_7', text: 'No combustible waste accumulated.' }
             ]
           },
           {
             code: '1.4',
-            title: 'Lighting',
+            title: 'Electrical Safety',
             comment: '',
             attachments: [],
             questions: [
-              { id: 'hs_1.4_1', text: 'Is facility lighting in line with legal requirements?' }
+              { id: 'hs_1.4_1', text: 'Electrical panels are accessible.' },
+              { id: 'hs_1.4_2', text: 'Distribution boards are labeled.' },
+              { id: 'hs_1.4_3', text: 'No exposed electrical wiring.' },
+              { id: 'hs_1.4_4', text: 'Extension cords are used safely.' },
+              { id: 'hs_1.4_5', text: 'Electrical equipment appears in good condition.' }
             ]
           },
           {
             code: '1.5',
-            title: 'Noise Exposure Levels',
+            title: 'Manual Handling & Ergonomics',
             comment: '',
             attachments: [],
             questions: [
-              { id: 'hs_1.5_1', text: 'Does the facility test noise exposure levels in line with legal requirements?' },
-              { id: 'hs_1.5_2', text: 'Are worker exposures to noise in line with legal requirements?' }
+              { id: 'hs_1.5_1', text: 'Workers use correct lifting techniques.' },
+              { id: 'hs_1.5_2', text: 'Trolleys available and in good condition.' },
+              { id: 'hs_1.5_3', text: 'Workers do not manually lift excessive loads.' },
+              { id: 'hs_1.5_4', text: 'Aisles are wide enough for trolley movement.' }
+            ]
+          },
+          {
+            code: '1.6',
+            title: 'PPE',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_1.6_1', text: 'Safety shoes are worn.' },
+              { id: 'hs_1.6_2', text: 'High-visibility vests worn where required.' },
+              { id: 'hs_1.6_3', text: 'Gloves available for handling materials if required.' },
+              { id: 'hs_1.6_4', text: 'PPE is in good condition.' }
+            ]
+          },
+          {
+            code: '1.7',
+            title: 'Equipment & Machinery',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_1.7_1', text: 'Fabric inspection machines are safe to operate.' },
+              { id: 'hs_1.7_2', text: 'Emergency stop buttons function correctly.' },
+              { id: 'hs_1.7_3', text: 'Machine guards are in place.' },
+              { id: 'hs_1.7_4', text: 'Equipment maintenance records are current.' }
+            ]
+          },
+          {
+            code: '1.8',
+            title: 'Chemical & Hazardous Materials',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_1.8_1', text: 'Cleaning chemicals are labeled.' },
+              { id: 'hs_1.8_2', text: 'Chemicals stored separately from fabrics.' },
+              { id: 'hs_1.8_3', text: 'SDS available for chemicals used.' }
+            ]
+          },
+          {
+            code: '1.9',
+            title: 'Emergency Preparedness',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_1.9_1', text: 'Emergency exits are clearly marked with illuminated EXIT signs.' },
+              { id: 'hs_1.9_2', text: 'Emergency exit routes are free from obstructions.' },
+              { id: 'hs_1.9_3', text: 'No fabric rolls, cartons, pallets, or other goods are stored on staircases, stair landings, or under stairways.' },
+              { id: 'hs_1.9_4', text: 'Emergency lighting units are installed at exit routes, stairways, and emergency exits.' },
+              { id: 'hs_1.9_5', text: 'Emergency lights are operational during a power failure (function test completed).' },
+              { id: 'hs_1.9_6', text: 'Emergency light batteries are in good condition and periodically tested.' },
+              { id: 'hs_1.9_7', text: 'Fire extinguishers are available, accessible, and properly mounted.' },
+              { id: 'hs_1.9_8', text: 'Fire extinguishers have valid inspection tags and are within the inspection period.' },
+              { id: 'hs_1.9_9', text: 'Fire alarm call points are accessible and unobstructed.' },
+              { id: 'hs_1.9_10', text: 'Manual fire alarm call points are clearly identified.' },
+              { id: 'hs_1.9_11', text: 'Fire alarm sounders are functional and audible throughout the fabric store.' },
+              { id: 'hs_1.9_12', text: 'Fire hose reels (if applicable) are accessible and in good condition.' },
+              { id: 'hs_1.9_13', text: 'Evacuation maps are displayed at prominent locations.' },
+              { id: 'hs_1.9_14', text: 'Assembly point signage is displayed and visible.' },
+              { id: 'hs_1.9_15', text: 'Fire doors are kept closed and are not wedged open.' },
+              { id: 'hs_1.9_16', text: 'No combustible materials are stored in front of electrical panels, fire equipment, or emergency exits.' },
+              { id: 'hs_1.9_17', text: 'Emergency contact numbers are displayed.' },
+              { id: 'hs_1.9_18', text: 'First aid box is complete and readily accessible.' },
+              { id: 'hs_1.9_19', text: 'Employees are aware of emergency evacuation procedures.' },
+              { id: 'hs_1.9_20', text: 'First aid box is available, fully stocked, and easily accessible.' }
+            ]
+          },
+          {
+            code: '1.10',
+            title: 'Security & Good Practices',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_1.10_1', text: 'Unauthorized persons restricted from the store.' },
+              { id: 'hs_1.10_2', text: 'CCTV operating (if installed).' },
+              { id: 'hs_1.10_3', text: 'Storage areas properly identified.' },
+              { id: 'hs_1.10_4', text: 'Fabric lots clearly labeled for traceability.' },
+              { id: 'hs_1.10_5', text: 'Pest control evidence available.' },
+              { id: 'hs_1.10_6', text: 'No signs of water leakage or dampness.' },
+              { id: 'hs_1.10_7', text: 'Overall health & safety conditions are satisfactory.' }
             ]
           }
         ]
@@ -255,28 +374,176 @@
       {
         id: 'sec-2.0',
         code: '2.0',
-        title: 'Overcrowding & Sanitation',
+        title: 'Cutting Section Health & Safety Inspection Checklist',
         subsections: [
           {
             code: '2.1',
-            title: 'Cleanliness, Sanitation & Waste',
+            title: 'Housekeeping & General Conditions',
             comment: '',
             attachments: [],
             questions: [
-              { id: 'hs_2.1_1', text: 'Is the workplace clean and tidy?' },
-              { id: 'hs_2.1_2', text: 'Are the facility\'s sanitation practices in line with legal requirements?' },
-              { id: 'hs_2.1_3', text: 'Are the facility\'s waste disposal practices in line with legal requirements?' },
-              { id: 'hs_2.1_4', text: 'Are waste disposal/discharge permits available and up to date?' }
+              { id: 'hs_2.1_1', text: 'Floors are clean, dry, and free from fabric waste, thread, and dust.' },
+              { id: 'hs_2.1_2', text: 'Walkways and aisles are clearly marked and unobstructed.' },
+              { id: 'hs_2.1_3', text: 'Workstations are clean and well organized.' },
+              { id: 'hs_2.1_4', text: 'Waste bins are available and regularly emptied.' },
+              { id: 'hs_2.1_5', text: 'Adequate lighting and ventilation are provided.' }
             ]
           },
           {
             code: '2.2',
-            title: 'Toilet / Restroom',
+            title: 'Material Storage & Handling',
             comment: '',
             attachments: [],
             questions: [
-              { id: 'hs_2.2_1', text: 'Are toilets in line with legal requirements?' },
-              { id: 'hs_2.2_2', text: 'Are separate toilets provided for males and females?' }
+              { id: 'hs_2.2_1', text: 'Fabric rolls are stored safely and securely.' },
+              { id: 'hs_2.2_2', text: 'Fabric bundles are stacked safely without risk of collapse.' },
+              { id: 'hs_2.2_3', text: 'Heavy materials are stored at lower levels.' },
+              { id: 'hs_2.2_4', text: 'Trolleys are in good condition and used correctly.' },
+              { id: 'hs_2.2_5', text: 'Materials do not obstruct walkways or emergency exits.' }
+            ]
+          },
+          {
+            code: '2.3',
+            title: 'Cutting Machines & Equipment',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_2.3_1', text: 'Straight knife cutting machines are in good working condition.' },
+              { id: 'hs_2.3_2', text: 'Straight knife blade guards are in place and functional.' },
+              { id: 'hs_2.3_3', text: 'Band knife cutting machines have adequate guards and safety devices.' },
+              { id: 'hs_2.3_4', text: 'Round knife cutting machines have blade guards in place.' },
+              { id: 'hs_2.3_5', text: 'Machine power cords (on overhead tracks) function correctly.' },
+              { id: 'hs_2.3_6', text: 'Emergency stop buttons on all cutting machines are clearly identified, accessible, and functioning properly.' },
+              { id: 'hs_2.3_7', text: 'Cutting machine cables and plugs are free from damages.' }
+            ]
+          },
+          {
+            code: '2.4',
+            title: 'Cutter Safety & Sharp Tool Control',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_2.4_1', text: 'Cutters wear cut-resistant (Kevlar/steel) gloves while using straight/round knife machines.' },
+              { id: 'hs_2.4_2', text: 'Cut-resistant gloves are in good condition and free from damage.' },
+              { id: 'hs_2.4_3', text: 'Operators are trained in the safe use of cutting equipment.' },
+              { id: 'hs_2.4_4', text: 'Scissors and hand cutting tools are in good condition.' },
+              { id: 'hs_2.4_5', text: 'Blade issue and return records are maintained.' },
+              { id: 'hs_2.4_6', text: 'Broken blades are disposed of in designated sharps containers.' }
+            ]
+          },
+          {
+            code: '2.5',
+            title: 'Spreader Machine Safety',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_2.5_1', text: 'Spreader machine is in good working condition.' },
+              { id: 'hs_2.5_2', text: 'Safety sensors (collision/obstacle sensors) of the spreader machine are operational.' },
+              { id: 'hs_2.5_3', text: 'Emergency stop button on the spreader machine is clearly marked, accessible, and functioning properly.' },
+              { id: 'hs_2.5_4', text: 'Machine guards and covers are securely fitted.' },
+              { id: 'hs_2.5_5', text: 'Warning labels and operating instructions are visible.' },
+              { id: 'hs_2.5_6', text: 'Machine travel path is free from obstructions.' }
+            ]
+          },
+          {
+            code: '2.6',
+            title: 'Fusing Machine Safety',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_2.6_1', text: 'Fusing machine is in good working condition.' },
+              { id: 'hs_2.6_2', text: 'Emergency stop button on the fusing machine is clearly marked and functioning.' },
+              { id: 'hs_2.6_3', text: 'Hot surfaces are guarded to prevent accidental contact.' },
+              { id: 'hs_2.6_4', text: 'Temperature controls and indicators function correctly.' },
+              { id: 'hs_2.6_5', text: 'Conveyor belt is in good condition and operates smoothly.' },
+              { id: 'hs_2.6_6', text: 'Machine guards and covers are securely fitted.' },
+              { id: 'hs_2.6_7', text: 'Adequate ventilation is provided around the fusing machine.' }
+            ]
+          },
+          {
+            code: '2.7',
+            title: 'Electrical Safety',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_2.7_1', text: 'Electrical panels are accessible and labeled.' },
+              { id: 'hs_2.7_2', text: 'No exposed wires or damaged cables.' },
+              { id: 'hs_2.7_3', text: 'Extension cords are used safely and not overloaded.' },
+              { id: 'hs_2.7_4', text: 'Machine power cables are in good condition.' }
+            ]
+          },
+          {
+            code: '2.8',
+            title: 'PPE',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_2.8_1', text: 'Operators wear safety shoes.' },
+              { id: 'hs_2.8_2', text: 'Metal mesh gloves/cut-resistant gloves are worn where required.' },
+              { id: 'hs_2.8_3', text: 'Finger guards are used where applicable.' },
+              { id: 'hs_2.8_4', text: 'PPE is clean and in good condition.' }
+            ]
+          },
+          {
+            code: '2.9',
+            title: 'Ergonomics & Manual Handling',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_2.9_1', text: 'Employees use proper lifting techniques when handling fabric rolls and bundles.' },
+              { id: 'hs_2.9_2', text: 'Adjustable workstations/cutting tables are maintained in good condition.' },
+              { id: 'hs_2.9_3', text: 'Fabric bundles are handled using appropriate lifting equipment or trolleys where required.' },
+              { id: 'hs_2.9_4', text: 'Employees maintain correct working posture while performing cutting operations.' },
+              { id: 'hs_2.9_5', text: 'Anti-fatigue mats are provided at standing workstations (e.g., cutting machines, fabric inspection machines, spreading tables, where applicable).' },
+              { id: 'hs_2.9_6', text: 'Anti-fatigue mats are clean, in good condition, and positioned correctly without creating trip hazards.' },
+              { id: 'hs_2.9_7', text: 'Employees use the anti-fatigue mats while performing prolonged standing tasks.' }
+            ]
+          },
+          {
+            code: '2.10',
+            title: 'Emergency Preparedness & Fire Safety',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_2.10_1', text: 'Emergency exits are clearly identified with illuminated EXIT signs.' },
+              { id: 'hs_2.10_2', text: 'Emergency exit routes and escape paths are free from obstructions.' },
+              { id: 'hs_2.10_3', text: 'No fabric bundles, cutting tables, trolleys, or waste are stored on staircases, stair landings, or under stairways.' },
+              { id: 'hs_2.10_4', text: 'Materials are not stored in front of emergency exits, fire doors, or evacuation routes.' },
+              { id: 'hs_2.10_5', text: 'Access to fire extinguishers, hose reels, fire alarm call points, hydrants, and electrical panels is unobstructed.' },
+              { id: 'hs_2.10_6', text: 'Fire doors are in good condition and not wedged open.' },
+              { id: 'hs_2.10_7', text: 'Emergency lighting is installed along escape routes and is operational.' },
+              { id: 'hs_2.10_8', text: 'Fire signs are illuminated and clearly visible.' },
+              { id: 'hs_2.10_9', text: 'Fire extinguishers are accessible, mounted, and within the inspection period.' },
+              { id: 'hs_2.10_10', text: 'Fire alarm call points are clearly identified and accessible.' },
+              { id: 'hs_2.10_11', text: 'Fire alarm sounders are functional and audible.' },
+              { id: 'hs_2.10_12', text: 'Evacuation plans and assembly point information are displayed.' },
+              { id: 'hs_2.10_13', text: 'Emergency contact numbers are displayed.' },
+              { id: 'hs_2.10_14', text: 'Fabric waste and combustible materials are removed regularly and not allowed to accumulate around cutting machines.' },
+              { id: 'hs_2.10_15', text: 'Employees understand emergency evacuation procedures.' }
+            ]
+          },
+          {
+            code: '2.11',
+            title: 'First Aid & Welfare',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_2.11_1', text: 'First aid box is fully stocked and accessible.' },
+              { id: 'hs_2.11_2', text: 'Trained first aiders are available.' },
+              { id: 'hs_2.11_3', text: 'Drinking water is available and hygienic.' }
+            ]
+          },
+          {
+            code: '2.12',
+            title: 'Safety Management',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_2.12_1', text: 'Safety instructions are displayed at cutting machines.' },
+              { id: 'hs_2.12_2', text: 'Machine operators are trained and authorized.' },
+              { id: 'hs_2.12_3', text: 'Near misses and incidents are reported and investigated.' },
+              { id: 'hs_2.12_4', text: 'Daily machine inspections are conducted and documented.' },
+              { id: 'hs_2.12_5', text: 'Corrective actions from previous inspections have been completed.' }
             ]
           }
         ]
@@ -284,26 +551,515 @@
       {
         id: 'sec-3.0',
         code: '3.0',
-        title: 'Emergency Preparedness',
+        title: 'Sewing Section Health & Safety Inspection Checklist',
         subsections: [
           {
             code: '3.1',
-            title: 'Fire Detection and Alarm',
+            title: 'Housekeeping & Workplace Conditions',
             comment: '',
             attachments: [],
             questions: [
-              { id: 'hs_3.1_1', text: 'Does the facility have a fire detection and alarm system in place?' },
-              { id: 'hs_3.1_2', text: 'Emergency alarm system is fully functioning and tested?' }
+              { id: 'hs_3.1_1', text: 'Floors are clean, dry, and free from oil, thread, and fabric waste.' },
+              { id: 'hs_3.1_2', text: 'Workstations are clean and organized.' },
+              { id: 'hs_3.1_3', text: 'Walkways and aisles are clearly marked and unobstructed.' },
+              { id: 'hs_3.1_4', text: 'Waste bins are provided and emptied regularly.' },
+              { id: 'hs_3.1_5', text: 'Adequate lighting is provided at all workstations.' },
+              { id: 'hs_3.1_6', text: 'Ventilation is adequate and fans are functioning properly.' },
+              { id: 'hs_3.1_7', text: 'Housekeeping standards are maintained throughout the section.' }
             ]
           },
           {
             code: '3.2',
-            title: 'Emergency Exits',
+            title: 'Sewing Machine Safety',
             comment: '',
             attachments: [],
             questions: [
-              { id: 'hs_3.2_1', text: 'Are there sufficient emergency exits from all work stations and rest areas?' },
-              { id: 'hs_3.2_2', text: 'Are all emergency exits clearly marked and unlocked during working hours?' }
+              { id: 'hs_3.2_1', text: 'Sewing machines are in good working condition.' },
+              { id: 'hs_3.2_2', text: 'Needle guards are installed and properly adjusted.' },
+              { id: 'hs_3.2_3', text: 'Eye guards are installed where required.' },
+              { id: 'hs_3.2_4', text: 'Belt and pulley guards are fitted and secure.' },
+              { id: 'hs_3.2_5', text: 'Machine tables are stable and free from damage.' },
+              { id: 'hs_3.2_6', text: 'Machine switches function properly.' },
+              { id: 'hs_3.2_7', text: 'Emergency stop buttons (where installed) are operational.' },
+              { id: 'hs_3.2_8', text: 'Thread stand is securely fixed.' },
+              { id: 'hs_3.2_9', text: 'Machine lighting is functional.' },
+              { id: 'hs_3.2_10', text: 'Preventive maintenance stickers are valid.' },
+              { id: 'hs_3.2_11', text: 'Oil leakage from sewing machines is not observed.' }
+            ]
+          },
+          {
+            code: '3.3',
+            title: 'Electrical Safety',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_3.3_1', text: 'Electrical cables are free from damage.' },
+              { id: 'hs_3.3_2', text: 'Plugs and sockets are in good condition.' },
+              { id: 'hs_3.3_3', text: 'Extension cords are not overloaded.' },
+              { id: 'hs_3.3_4', text: 'Electrical panels are accessible and labeled.' },
+              { id: 'hs_3.3_5', text: 'No exposed live electrical parts are observed.' }
+            ]
+          },
+          {
+            code: '3.4',
+            title: 'Ergonomics',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_3.4_1', text: 'Chairs are stable and adjustable.' },
+              { id: 'hs_3.4_2', text: 'Chair backrests are in good condition.' },
+              { id: 'hs_3.4_3', text: 'Operators maintain proper sitting posture.' },
+              { id: 'hs_3.4_4', text: 'Foot pedals are positioned correctly.' },
+              { id: 'hs_3.4_5', text: 'Footrests are available where required.' },
+              { id: 'hs_3.4_6', text: 'Anti-fatigue mats are provided at standing workstations (inspection, ironing, bundle handling, etc.).' },
+              { id: 'hs_3.4_7', text: 'Anti-fatigue mats are clean, in good condition, and do not create trip hazards.' }
+            ]
+          },
+          {
+            code: '3.5',
+            title: 'PPE & Operator Safety',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_3.5_1', text: 'Safety shoes are worn where required.' },
+              { id: 'hs_3.5_2', text: 'Appropriate PPE is available and used.' },
+              { id: 'hs_3.5_3', text: 'Loose clothing, jewelry, or scarves are not worn near moving machinery.' },
+              { id: 'hs_3.5_4', text: 'Long hair is properly tied back where required.' },
+              { id: 'hs_3.5_5', text: 'Operators are trained in safe machine operation.' }
+            ]
+          },
+          {
+            code: '3.6',
+            title: 'Needle & Sharp Tool Control',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_3.6_1', text: 'Needle control procedure is implemented.' },
+              { id: 'hs_3.6_2', text: 'Broken needle records are maintained.' },
+              { id: 'hs_3.6_3', text: 'Broken needle pieces are attached to the record sheet.' },
+              { id: 'hs_3.6_4', text: 'Needle disposal container is available.' },
+              { id: 'hs_3.6_5', text: 'Scissors and trimming tools are in good condition.' },
+              { id: 'hs_3.6_6', text: 'Blade/knife issue and return records are maintained.' }
+            ]
+          },
+          {
+            code: '3.7',
+            title: 'Steam Iron & Vacuum Table Safety',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_3.7_1', text: 'Steam irons are in good working condition.' },
+              { id: 'hs_3.7_2', text: 'Iron rests are provided and used.' },
+              { id: 'hs_3.7_3', text: 'Steam hoses are free from leakage or damage.' },
+              { id: 'hs_3.7_4', text: 'Vacuum tables are functioning correctly.' },
+              { id: 'hs_3.7_5', text: 'Emergency stop buttons on ironing/vacuum equipment are operational.' },
+              { id: 'hs_3.7_6', text: 'Electrical cables of ironing equipment are in good condition.' },
+              { id: 'hs_3.7_7', text: 'Operators are protected from hot surfaces and steam.' }
+            ]
+          },
+          {
+            code: '3.8',
+            title: 'Emergency Preparedness & Fire Safety',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_3.8_1', text: 'Emergency exits are clearly identified with illuminated EXIT signs.' },
+              { id: 'hs_3.8_2', text: 'Emergency exit routes and aisles are unobstructed.' },
+              { id: 'hs_3.8_3', text: 'No sewing bundles, trolleys, chairs, cartons, or materials are stored on staircases, stair landings, or under stairways.' },
+              { id: 'hs_3.8_4', text: 'No materials are stored in front of emergency exits or fire doors.' },
+              { id: 'hs_3.8_5', text: 'Access to fire extinguishers, hose reels, hydrants, alarm call points, and electrical panels is unobstructed.' },
+              { id: 'hs_3.8_6', text: 'Fire doors are not blocked or wedged open.' },
+              { id: 'hs_3.8_7', text: 'Emergency lighting is installed and functioning properly.' },
+              { id: 'hs_3.8_8', text: 'Exit signs are illuminated and clearly visible.' },
+              { id: 'hs_3.8_9', text: 'Fire extinguishers are properly mounted, accessible, and within the inspection period.' },
+              { id: 'hs_3.8_10', text: 'Fire alarm call points are visible and accessible.' },
+              { id: 'hs_3.8_11', text: 'Fire alarm sounders are operational.' },
+              { id: 'hs_3.8_12', text: 'Emergency evacuation maps are displayed.' },
+              { id: 'hs_3.8_13', text: 'Emergency contact numbers are displayed.' },
+              { id: 'hs_3.8_14', text: 'Fabric waste and combustible materials are removed regularly.' },
+              { id: 'hs_3.8_15', text: 'Employees are aware of emergency evacuation procedures.' }
+            ]
+          },
+          {
+            code: '3.9',
+            title: 'First Aid & Welfare',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_3.9_1', text: 'First aid box is complete and accessible.' },
+              { id: 'hs_3.9_2', text: 'Trained first aiders are available.' },
+              { id: 'hs_3.9_3', text: 'Drinking water is clean and readily available.' }
+            ]
+          },
+          {
+            code: '3.10',
+            title: 'Safety Management',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_3.10_1', text: 'Machine safety instructions are displayed.' },
+              { id: 'hs_3.10_2', text: 'Authorized operators only operate sewing machines.' },
+              { id: 'hs_3.10_3', text: 'Near misses and incidents are reported and investigated.' },
+              { id: 'hs_3.10_4', text: 'Corrective actions from previous inspections have been completed.' },
+              { id: 'hs_3.10_5', text: 'Safety signs are displayed and in good condition.' },
+              { id: 'hs_3.10_6', text: 'Employees have received Health & Safety training.' },
+              { id: 'hs_3.10_7', text: 'Visitors wear required PPE before entering the sewing section.' },
+              { id: 'hs_3.10_8', text: 'Overall Health & Safety conditions in the sewing section are satisfactory.' }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'sec-4.0',
+        code: '4.0',
+        title: 'Finishing Section Health & Safety Inspection Checklist',
+        subsections: [
+          {
+            code: '4.1',
+            title: 'Housekeeping & General Workplace Conditions',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_4.1_1', text: 'Floors are clean, dry, and free from oil, water, thread, and packing waste.' },
+              { id: 'hs_4.1_2', text: 'Walkways and aisles are clearly marked and unobstructed.' },
+              { id: 'hs_4.1_3', text: 'Workstations are clean and organized.' },
+              { id: 'hs_4.1_4', text: 'Waste bins are available, labeled, and emptied regularly.' },
+              { id: 'hs_4.1_5', text: 'Adequate lighting is provided throughout the section.' },
+              { id: 'hs_4.1_6', text: 'Ventilation is adequate in all work areas.' },
+              { id: 'hs_4.1_7', text: 'Housekeeping standards are maintained throughout the finishing section.' }
+            ]
+          },
+          {
+            code: '4.2',
+            title: 'Material Storage & Warehouse Safety',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_4.2_1', text: 'Finished goods are stacked safely and within the approved height limit.' },
+              { id: 'hs_4.2_2', text: 'Pallets are in good condition and free from damage.' },
+              { id: 'hs_4.2_3', text: 'Heavy cartons are stored on lower pallet levels.' },
+              { id: 'hs_4.2_4', text: 'Racks are stable and free from damage.' },
+              { id: 'hs_4.2_5', text: 'Rack load capacity (SWL) signage is displayed.' },
+              { id: 'hs_4.2_6', text: 'Warehouse aisles remain clear at all times.' },
+              { id: 'hs_4.2_7', text: 'Materials are not stored beneath staircases.' },
+              { id: 'hs_4.2_8', text: 'Goods are not stored in front of electrical panels.' },
+              { id: 'hs_4.2_9', text: 'Warehouse lighting is adequate.' }
+            ]
+          },
+          {
+            code: '4.3',
+            title: 'Packing Section (CTPAT Area)',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_4.3_1', text: 'CTPAT packing area access is restricted to authorized personnel.' },
+              { id: 'hs_4.3_2', text: 'Visitors are controlled and recorded before entry.' },
+              { id: 'hs_4.3_3', text: 'Cartons are inspected before packing.' },
+              { id: 'hs_4.3_4', text: 'Packing materials are clean and stored properly.' },
+              { id: 'hs_4.3_5', text: 'Cartons are stacked safely.' },
+              { id: 'hs_4.3_6', text: 'Packing tables are stable and ergonomically suitable.' },
+              { id: 'hs_4.3_7', text: 'Cutting knives/box cutters are controlled and stored safely.' },
+              { id: 'hs_4.3_8', text: 'Blade issue and return records are maintained.' },
+              { id: 'hs_4.3_9', text: 'CCTV coverage is operational in CTPAT areas.' },
+              { id: 'hs_4.3_10', text: 'Cartons are protected from contamination.' }
+            ]
+          },
+          {
+            code: '4.4',
+            title: 'Ironing Section',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_4.4_1', text: 'Steam irons are in good working condition.' },
+              { id: 'hs_4.4_2', text: 'Steam hoses are free from leaks.' },
+              { id: 'hs_4.4_3', text: 'Iron rests are provided and used correctly.' },
+              { id: 'hs_4.4_4', text: 'Iron table vacuum system is functioning properly.' },
+              { id: 'hs_4.4_5', text: 'Iron tables are stable.' },
+              { id: 'hs_4.4_6', text: 'Emergency stop buttons are operational.' },
+              { id: 'hs_4.4_7', text: 'Operators are protected from hot surfaces and steam burns.' },
+              { id: 'hs_4.4_8', text: 'Steam traps and condensate lines are free from leakage.' }
+            ]
+          },
+          {
+            code: '4.5',
+            title: 'Heat Seal Machines',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_4.5_1', text: 'Heat seal machines are in good working condition.' },
+              { id: 'hs_4.5_2', text: 'Two-hand safety controls operate correctly (where installed).' },
+              { id: 'hs_4.5_3', text: 'Emergency stop buttons are functional.' },
+              { id: 'hs_4.5_4', text: 'Warning labels are visible.' },
+              { id: 'hs_4.5_5', text: 'Hot surfaces are guarded.' },
+              { id: 'hs_4.5_6', text: 'Operators are trained and authorized.' }
+            ]
+          },
+          {
+            code: '4.6',
+            title: 'Sewing, Button Attaching & Snap Attaching Machines',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_4.6_1', text: 'Machines are in good working condition.' },
+              { id: 'hs_4.6_2', text: 'Needle guards are installed.' },
+              { id: 'hs_4.6_3', text: 'Eye guards are provided where required.' },
+              { id: 'hs_4.6_4', text: 'Belt and pulley guards are installed.' },
+              { id: 'hs_4.6_5', text: 'Emergency stop buttons function correctly (where applicable).' },
+              { id: 'hs_4.6_6', text: 'Machine switches operate properly.' },
+              { id: 'hs_4.6_7', text: 'Needle control procedure is followed.' },
+              { id: 'hs_4.6_8', text: 'Broken needle records are maintained.' }
+            ]
+          },
+          {
+            code: '4.7',
+            title: 'MD Machines (Metal Detector)',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_4.7_1', text: 'Metal detector machine is operational.' },
+              { id: 'hs_4.7_2', text: 'Daily challenge test is conducted and recorded.' },
+              { id: 'hs_4.7_3', text: 'Calibration records are available.' },
+              { id: 'hs_4.7_4', text: 'Reject mechanism functions correctly.' },
+              { id: 'hs_4.7_5', text: 'Emergency stop button is operational.' },
+              { id: 'hs_4.7_6', text: 'Operators are trained.' }
+            ]
+          },
+          {
+            code: '4.8',
+            title: 'Spot Cleaning Room',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_4.8_1', text: 'Chemicals are properly labeled.' },
+              { id: 'hs_4.8_2', text: 'SDS are available.' },
+              { id: 'hs_4.8_3', text: 'Chemical containers remain closed after use.' },
+              { id: 'hs_4.8_4', text: 'Local exhaust ventilation is operational.' },
+              { id: 'hs_4.8_5', text: 'Eye wash station is accessible and functional.' },
+              { id: 'hs_4.8_6', text: 'Spill kits are available.' },
+              { id: 'hs_4.8_7', text: 'Chemical-resistant gloves are worn.' },
+              { id: 'hs_4.8_8', text: 'Goggles/face shields are used where required.' },
+              { id: 'hs_4.8_9', text: 'No incompatible chemicals are stored together.' }
+            ]
+          },
+          {
+            code: '4.9',
+            title: 'Thread Sucking & Dust Removing Area',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_4.9_1', text: 'Dust extraction system is operational.' },
+              { id: 'hs_4.9_2', text: 'Dust collection units are maintained.' },
+              { id: 'hs_4.9_3', text: 'Air hoses are in good condition.' },
+              { id: 'hs_4.9_4', text: 'Excess dust accumulation is not observed.' },
+              { id: 'hs_4.9_5', text: 'Employees wear hearing protection in designated high-noise areas.' },
+              { id: 'hs_4.9_6', text: 'Hearing protection signage is displayed.' },
+              { id: 'hs_4.9_7', text: 'Noise monitoring records are available.' },
+              { id: 'hs_4.9_8', text: 'Employees exposed to high noise are included in the hearing conservation program.' },
+              { id: 'hs_4.9_9', text: 'Respiratory protection is provided where required.' }
+            ]
+          },
+          {
+            code: '4.10',
+            title: 'Electrical Safety',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_4.10_1', text: 'Electrical panels are accessible and labeled.' },
+              { id: 'hs_4.10_2', text: 'No exposed wiring is observed.' },
+              { id: 'hs_4.10_3', text: 'Plugs and sockets are in good condition.' },
+              { id: 'hs_4.10_4', text: 'Extension cords are not overloaded.' }
+            ]
+          },
+          {
+            code: '4.11',
+            title: 'Ergonomics',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_4.11_1', text: 'Employees maintain proper working posture.' },
+              { id: 'hs_4.11_2', text: 'Manual lifting techniques are followed.' },
+              { id: 'hs_4.11_3', text: 'Trolleys are used for transporting heavy cartons.' },
+              { id: 'hs_4.11_4', text: 'Anti-fatigue mats are provided at prolonged standing workstations.' },
+              { id: 'hs_4.11_5', text: 'Anti-fatigue mats are in good condition and do not create trip hazards.' }
+            ]
+          },
+          {
+            code: '4.12',
+            title: 'Emergency Preparedness & Fire Safety',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_4.12_1', text: 'Emergency exits have illuminated EXIT signs.' },
+              { id: 'hs_4.12_2', text: 'Escape routes are unobstructed.' },
+              { id: 'hs_4.12_3', text: 'Goods, cartons, pallets, and trolleys are not stored on staircases, stair landings, or under stairways.' },
+              { id: 'hs_4.12_4', text: 'Materials are not stored in front of emergency exits or fire doors.' },
+              { id: 'hs_4.12_5', text: 'Access to fire extinguishers, hose reels, hydrants, alarm call points, and electrical panels is unobstructed.' },
+              { id: 'hs_4.12_6', text: 'Fire doors are not blocked or wedged open.' },
+              { id: 'hs_4.12_7', text: 'Emergency lighting is installed and functioning properly.' },
+              { id: 'hs_4.12_8', text: 'Fire extinguishers are inspected and within the service period.' },
+              { id: 'hs_4.12_9', text: 'Fire alarm call points are visible and accessible.' },
+              { id: 'hs_4.12_10', text: 'Evacuation maps and emergency contact numbers are displayed.' },
+              { id: 'hs_4.12_11', text: 'Employees are aware of emergency evacuation procedures.' }
+            ]
+          },
+          {
+            code: '4.13',
+            title: 'First Aid',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_4.13_1', text: 'First aid box is complete and accessible.' },
+              { id: 'hs_4.13_2', text: 'Trained first aiders are available.' }
+            ]
+          },
+          {
+            code: '4.14',
+            title: 'Safety Management',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_4.14_1', text: 'Operators are trained and authorized for their assigned machines.' },
+              { id: 'hs_4.14_2', text: 'Machine operating instructions are displayed.' },
+              { id: 'hs_4.14_3', text: 'Daily machine safety inspections are completed.' },
+              { id: 'hs_4.14_4', text: 'Near misses and incidents are reported and investigated.' },
+              { id: 'hs_4.14_5', text: 'Safety signs are displayed and in good condition.' },
+              { id: 'hs_4.14_6', text: 'Overall health and safety conditions in the finishing section are satisfactory.' }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'sec-5.0',
+        code: '5.0',
+        title: 'Printing & Cleaning Chemical Stores Health & Safety Inspection Checklist',
+        subsections: [
+          {
+            code: '5.1',
+            title: 'Housekeeping & General Conditions',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_5.1_1', text: 'Chemical store is clean, dry, and well maintained.' },
+              { id: 'hs_5.1_2', text: 'Floors are free from chemical spills, leaks, and obstructions.' },
+              { id: 'hs_5.1_3', text: 'Walkways and access routes are clearly marked and unobstructed.' },
+              { id: 'hs_5.1_4', text: 'Adequate lighting is provided throughout the chemical store.' },
+              { id: 'hs_5.1_5', text: 'Adequate natural or mechanical ventilation is available and functioning properly.' },
+              { id: 'hs_5.1_6', text: 'Drains are protected to prevent chemical discharge into the environment.' }
+            ]
+          },
+          {
+            code: '5.2',
+            title: 'Chemical Storage & Segregation',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_5.2_1', text: 'All chemical containers are clearly labeled with the product name and hazard information.' },
+              { id: 'hs_5.2_2', text: 'GHS hazard labels are intact and legible.' },
+              { id: 'hs_5.2_3', text: 'Chemicals are stored only in approved containers.' },
+              { id: 'hs_5.2_4', text: 'Containers are tightly closed when not in use.' },
+              { id: 'hs_5.2_5', text: 'Chemicals are stored according to compatibility (acids, alkalis, oxidizers, flammables, etc.).' },
+              { id: 'hs_5.2_6', text: 'Incompatible chemicals are segregated.' },
+              { id: 'hs_5.2_7', text: 'Flammable chemicals are stored in designated flammable cabinets or approved storage areas.' },
+              { id: 'hs_5.2_8', text: 'Chemical containers are free from leakage, corrosion, or damage.' },
+              { id: 'hs_5.2_9', text: 'Empty chemical containers are stored separately from full containers.' },
+              { id: 'hs_5.2_10', text: 'Expired chemicals are identified and segregated.' },
+              { id: 'hs_5.2_11', text: 'FIFO/FEFO system is followed.' },
+              { id: 'hs_5.2_12', text: 'Maximum storage quantities are not exceeded.' },
+              { id: 'hs_5.2_13', text: 'Chemicals are stored on pallets or shelves and not directly on the floor (unless specifically designed for floor storage).' },
+              { id: 'hs_5.2_14', text: 'Secondary containment (spill trays/bunds) is provided for liquid chemicals.' },
+              { id: 'hs_5.2_15', text: 'Shelving is stable and suitable for chemical storage.' },
+              { id: 'hs_5.2_16', text: 'No food, beverages, or personal belongings are stored inside the chemical store.' }
+            ]
+          },
+          {
+            code: '5.3',
+            title: 'Chemical Documentation',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_5.3_1', text: 'Safety Data Sheets (SDS) are available for every chemical.' },
+              { id: 'hs_5.3_2', text: 'SDS are current and readily accessible.' },
+              { id: 'hs_5.3_3', text: 'Chemical inventory is updated.' },
+              { id: 'hs_5.3_4', text: 'Chemical register matches physical inventory.' },
+              { id: 'hs_5.3_5', text: 'Chemical issue and return records are maintained.' },
+              { id: 'hs_5.3_6', text: 'Hazard warning signs are displayed.' },
+              { id: 'hs_5.3_7', text: 'Chemical storage procedures are displayed.' }
+            ]
+          },
+          {
+            code: '5.4',
+            title: 'PPE & Personnel Safety',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_5.4_1', text: 'Chemical-resistant gloves are available and used.' },
+              { id: 'hs_5.4_2', text: 'Chemical splash goggles are available and worn.' },
+              { id: 'hs_5.4_3', text: 'Face shields are available where required.' },
+              { id: 'hs_5.4_4', text: 'Chemical-resistant aprons are provided.' },
+              { id: 'hs_5.4_5', text: 'Safety shoes are worn.' },
+              { id: 'hs_5.4_6', text: 'Respiratory protection is available where required.' },
+              { id: 'hs_5.4_7', text: 'PPE is clean, in good condition, and stored properly.' },
+              { id: 'hs_5.4_8', text: 'Employees are trained in chemical handling procedures.' }
+            ]
+          },
+          {
+            code: '5.5',
+            title: 'Spill Prevention & Emergency Response',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_5.5_1', text: 'Chemical spill kits are available.' },
+              { id: 'hs_5.5_2', text: 'Spill kits are fully stocked and easily accessible.' },
+              { id: 'hs_5.5_3', text: 'Spill response instructions are displayed.' },
+              { id: 'hs_5.5_4', text: 'Employees are trained in spill response procedures.' },
+              { id: 'hs_5.5_5', text: 'Emergency eyewash station is accessible and operational.' },
+              { id: 'hs_5.5_6', text: 'Safety shower is available and tested periodically (where required).' },
+              { id: 'hs_5.5_7', text: 'Emergency telephone numbers are displayed.' }
+            ]
+          },
+          {
+            code: '5.6',
+            title: 'Fire Safety',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_5.6_1', text: 'Emergency exits have illuminated EXIT signs.' },
+              { id: 'hs_5.6_2', text: 'Emergency escape routes are unobstructed.' },
+              { id: 'hs_5.6_3', text: 'Chemicals are not stored on staircases, stair landings, or under stairways.' },
+              { id: 'hs_5.6_4', text: 'Chemicals are not stored in front of emergency exits or fire doors.' },
+              { id: 'hs_5.6_5', text: 'Fire extinguishers are suitable for chemical fires and easily accessible.' },
+              { id: 'hs_5.6_6', text: 'Fire extinguishers are within the inspection period.' },
+              { id: 'hs_5.6_7', text: 'Fire alarm call points are accessible.' },
+              { id: 'hs_5.6_8', text: 'Emergency lighting is installed and functioning properly.' },
+              { id: 'hs_5.6_9', text: 'Fire doors are not blocked or wedged open.' },
+              { id: 'hs_5.6_10', text: 'Access to electrical panels, fire extinguishers, hydrants, hose reels, and alarm call points is unobstructed.' },
+              { id: 'hs_5.6_11', text: 'Smoking is strictly prohibited and "No Smoking" signs are displayed.' },
+              { id: 'hs_5.6_12', text: 'Flammable chemical storage area has explosion-proof electrical fittings where required.' }
+            ]
+          },
+          {
+            code: '5.7',
+            title: 'Security & Access Control',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_5.7_1', text: 'Chemical store remains locked when unattended.' },
+              { id: 'hs_5.7_2', text: 'Access is restricted to authorized personnel only.' },
+              { id: 'hs_5.7_3', text: 'Authorized personnel list is available.' },
+              { id: 'hs_5.7_4', text: 'Visitors are supervised while inside the chemical store.' },
+              { id: 'hs_5.7_5', text: 'Warning signs such as "Authorized Personnel Only", "Hazardous Chemicals", "Wear PPE", and "No Smoking" are displayed.' }
+            ]
+          },
+          {
+            code: '5.8',
+            title: 'Training & Management',
+            comment: '',
+            attachments: [],
+            questions: [
+              { id: 'hs_5.8_1', text: 'Chemical handling training is up to date.' },
+              { id: 'hs_5.8_2', text: 'Employees understand GHS hazard symbols.' },
+              { id: 'hs_5.8_3', text: 'Emergency drills include chemical spill scenarios.' },
+              { id: 'hs_5.8_4', text: 'Overall health and safety conditions of the chemical store are satisfactory.' }
             ]
           }
         ]
@@ -311,7 +1067,7 @@
     ];
 
     // LOCAL STORAGE STATE INITIALIZATION
-    const LOCAL_STORAGE_KEY = 'maliban_hs_section_data_v3';
+    const LOCAL_STORAGE_KEY = 'maliban_hs_section_data_v10';
     let hsDataStore;
 
     const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -326,6 +1082,7 @@
             q.answer = 'YES';
             q.severity = 'NONE';
             q.legalFlag = false;
+            if (!q.attachments) q.attachments = [];
           });
         });
       });
@@ -333,6 +1090,16 @@
 
     // STATE CONTROLLERS & RENDERING
     let activeSubsectionCode = '1.1';
+    let expandedSidebarSections = ['1.0'];
+
+    function toggleSidebarSection(secCode) {
+      if (expandedSidebarSections.includes(secCode)) {
+        expandedSidebarSections = expandedSidebarSections.filter(c => c !== secCode);
+      } else {
+        expandedSidebarSections.push(secCode);
+      }
+      renderSidebarNav();
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
       renderSidebarNav();
@@ -350,54 +1117,84 @@
       let totalAnswered = 0;
 
       hsDataStore.forEach(section => {
-        const secHeader = document.createElement('div');
-        secHeader.className = 'px-2 pt-3 pb-1 text-[11px] font-extrabold text-sky-400 uppercase tracking-wider flex items-center justify-between';
-        secHeader.innerHTML = `<span>${section.code} ${section.title}</span>`;
-        navContainer.appendChild(secHeader);
+        const isExpanded = expandedSidebarSections.includes(section.code);
+        
+        // Highlight logic for Main Section (if any of its subsections is active)
+        const isSecActive = section.subsections.some(s => s.code === activeSubsectionCode);
 
+        // Calculate progress for the section to show on the header (optional but good)
+        let secTotalQuestions = 0;
+        let secTotalAnswered = 0;
         section.subsections.forEach(sub => {
-          const subTotal = sub.questions.length;
-          // Count as answered if not UNANSWERED
-          const subAnswered = sub.questions.filter(q => q.answer && q.answer !== 'UNANSWERED').length;
-          
-          totalQuestions += subTotal;
-          totalAnswered += subAnswered;
-
-          const isActive = sub.code === activeSubsectionCode;
-          const isComplete = subAnswered === subTotal;
-
-          const btn = document.createElement('button');
-          btn.onclick = () => scrollToSubsection(sub.code);
-          btn.className = `w-full text-left px-3 py-2 rounded-xl transition flex items-center justify-between text-xs border ${
-            isActive 
-              ? 'bg-sky-950/80 border-sky-500/60 font-bold text-sky-300 shadow-md' 
-              : 'bg-slate-900/60 border-slate-800/80 text-slate-300 hover:bg-slate-800/70 hover:border-slate-700'
-          }`;
-
-          btn.innerHTML = `
-            <span class="flex items-center gap-2 truncate">
-              <span class="px-1.5 py-0.5 rounded bg-slate-950 text-[10px] font-mono text-slate-400 border border-slate-800">${sub.code}</span>
-              <span class="truncate">${sub.title}</span>
-            </span>
-            <span class="text-[10px] ${isComplete ? 'text-emerald-400 font-bold' : 'text-slate-400'}">${subAnswered}/${subTotal}</span>
-          `;
-
-          navContainer.appendChild(btn);
+          secTotalQuestions += sub.questions.length;
+          secTotalAnswered += sub.questions.filter(q => q.answer && q.answer !== 'UNANSWERED').length;
         });
+        totalQuestions += secTotalQuestions;
+        totalAnswered += secTotalAnswered;
+
+        // Render Clickable Section Header
+        const secHeaderBtn = document.createElement('button');
+        secHeaderBtn.onclick = () => toggleSidebarSection(section.code);
+        secHeaderBtn.className = `w-full text-left px-2 pt-3 pb-2 text-[11px] font-extrabold uppercase tracking-wider flex items-center justify-between transition group border-b border-transparent ${
+          isSecActive ? 'text-sky-300' : 'text-slate-400 hover:text-sky-200'
+        }`;
+        
+        secHeaderBtn.innerHTML = `
+          <span class="flex items-center gap-2">
+            <i data-lucide="${isExpanded ? 'chevron-down' : 'chevron-right'}" class="w-3.5 h-3.5 transition-transform duration-200 ${isExpanded ? 'text-sky-400' : 'text-slate-500 group-hover:text-sky-300'}"></i>
+            <span class="truncate">${section.code} ${section.title}</span>
+          </span>
+          <span class="text-[9px] font-mono bg-slate-900/50 px-1.5 py-0.5 rounded text-slate-500">${secTotalAnswered}/${secTotalQuestions}</span>
+        `;
+        navContainer.appendChild(secHeaderBtn);
+
+        // If expanded, render subsections
+        if (isExpanded) {
+          const subContainer = document.createElement('div');
+          subContainer.className = 'pl-1 space-y-1 mt-1 mb-2 border-l-2 border-slate-800/60 ml-2';
+
+          section.subsections.forEach(sub => {
+            const subTotal = sub.questions.length;
+            const subAnswered = sub.questions.filter(q => q.answer && q.answer !== 'UNANSWERED').length;
+            
+            const isActive = sub.code === activeSubsectionCode;
+            const isComplete = subAnswered === subTotal;
+
+            const btn = document.createElement('button');
+            btn.onclick = () => scrollToSubsection(sub.code);
+            btn.className = `w-full text-left px-3 py-2 rounded-xl transition flex items-center justify-between text-xs border ${
+              isActive 
+                ? 'bg-sky-950/80 border-sky-500/60 font-bold text-sky-300 shadow-md' 
+                : 'bg-slate-900/40 border-transparent text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 hover:border-slate-700/50'
+            }`;
+
+            btn.innerHTML = `
+              <span class="flex items-center gap-2 truncate">
+                <span class="px-1.5 py-0.5 rounded ${isActive ? 'bg-sky-900/50' : 'bg-slate-950'} text-[10px] font-mono ${isActive ? 'text-sky-200' : 'text-slate-500'} border ${isActive ? 'border-sky-800/50' : 'border-slate-800'}">${sub.code}</span>
+                <span class="truncate">${sub.title}</span>
+              </span>
+              <span class="text-[10px] ${isComplete ? 'text-emerald-400 font-bold' : 'text-slate-500'}">${subAnswered}/${subTotal}</span>
+            `;
+
+            subContainer.appendChild(btn);
+          });
+          navContainer.appendChild(subContainer);
+        }
       });
 
       const overallPct = totalQuestions > 0 ? Math.round((totalAnswered / totalQuestions) * 100) : 0;
       document.getElementById('hsOverallProgressBadge').innerText = `${overallPct}% Complete`;
+      lucide.createIcons();
     }
 
-    // SCROLL TO SUBSECTION
+    // SCROLL TO SUBSECTION (Now also serves as the view filter trigger)
     function scrollToSubsection(subCode) {
       activeSubsectionCode = subCode;
       renderSidebarNav();
-      const targetElement = document.getElementById(`sub-${subCode}`);
-      if (targetElement) {
-        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      renderSubsections();
+      
+      // Still smoothly scroll to top of the content area
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // RENDER MAIN SUBSECTIONS CONTENT
@@ -406,7 +1203,29 @@
       mainContainer.innerHTML = '';
 
       hsDataStore.forEach(section => {
+        // Find if this section contains the active subsection
+        const hasActiveSub = section.subsections.some(s => s.code === activeSubsectionCode);
+        if (!hasActiveSub) return; // SKIP rendering if it's not the active section
+
+        // Render Main Section Header for context
+        const secHeader = document.createElement('div');
+        secHeader.className = 'bg-gradient-to-r from-sky-900 to-slate-900 px-6 py-4 rounded-2xl border border-sky-800/80 shadow-xl mb-6 flex items-center justify-between';
+        
+        secHeader.innerHTML = `
+          <h2 class="text-base sm:text-lg font-black text-white uppercase tracking-widest flex items-center gap-3">
+            <span class="px-3 py-1 bg-sky-950 border border-sky-600 text-sky-300 rounded-lg shadow-inner font-mono">${section.code}</span>
+            <span>${section.title}</span>
+          </h2>
+          <span class="hidden sm:inline-block px-3 py-1 bg-slate-900/50 border border-slate-700 text-slate-300 text-[11px] font-bold rounded-lg">
+            ${section.subsections.length} Sub-Sections Total
+          </span>
+        `;
+        
+        mainContainer.appendChild(secHeader);
+
         section.subsections.forEach(sub => {
+          if (sub.code !== activeSubsectionCode) return; // SKIP rendering other subsections
+
           const card = document.createElement('div');
           card.id = `sub-${sub.code}`;
           card.className = 'glass-card rounded-2xl border border-slate-800 overflow-hidden shadow-xl space-y-4 p-5';
@@ -466,6 +1285,63 @@
                         </label>
                       </div>
 
+                    </div>
+                    <!-- Verifier Comments -->
+                    <div class="mt-3 pt-3 border-t border-slate-800/50">
+                      <label class="block text-[10px] uppercase font-bold text-sky-400 mb-1.5 flex items-center gap-1.5">
+                        <i data-lucide="message-square" class="w-3 h-3"></i> Verifier Comments
+                      </label>
+                      <textarea 
+                        onchange="updateQuestionComment('${sub.code}', '${q.id}', this.value)"
+                        rows="2" 
+                        placeholder="Add specific comments or findings for this question..."
+                        class="w-full p-2 rounded-lg bg-slate-950 border border-slate-700 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 text-[11px]"
+                      >${q.comment || ''}</textarea>
+                    </div>
+                    <!-- Question-Level Attachments -->
+                    <div class="mt-3 pt-3 border-t border-slate-800/50">
+                      <div class="flex items-center justify-between mb-2">
+                        <label class="text-[10px] uppercase font-bold text-sky-400 flex items-center gap-1.5">
+                          <i data-lucide="paperclip" class="w-3 h-3"></i> Evidence
+                        </label>
+                        <button onclick="document.getElementById('file-input-' + '${q.id}').click()" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-sky-300 px-2 py-1 rounded transition flex items-center gap-1 border border-slate-700 shadow-sm cursor-pointer z-10">
+                          <i data-lucide="camera" class="w-3 h-3"></i> Upload / Capture
+                        </button>
+                        <input type="file" id="file-input-${q.id}" class="hidden" multiple accept="image/*,.pdf" capture="environment" onchange="handleQuestionFileUpload('${sub.code}', '${q.id}', this.files)">
+                      </div>
+                      
+                      <!-- Drag & Drop Zone -->
+                      <div 
+                        ondragover="event.preventDefault(); this.classList.add('border-sky-500', 'bg-sky-950/30');" 
+                        ondragleave="this.classList.remove('border-sky-500', 'bg-sky-950/30');" 
+                        ondrop="event.preventDefault(); this.classList.remove('border-sky-500', 'bg-sky-950/30'); handleQuestionFileDrop(event, '${sub.code}', '${q.id}');"
+                        class="border-2 border-dashed border-slate-700 hover:border-slate-500 rounded-lg p-3 text-center transition-colors cursor-pointer relative"
+                        onclick="document.getElementById('file-input-${q.id}').click()"
+                      >
+                        <p class="text-[10px] text-slate-400 font-medium pointer-events-none ${q.attachments && q.attachments.length > 0 ? 'hidden' : 'block'}">Drag & Drop files here, or click to browse</p>
+                        
+                        <!-- Attachment List -->
+                        <div id="q-attachments-${q.id}" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 ${q.attachments && q.attachments.length > 0 ? 'mt-2' : ''} pointer-events-auto" onclick="event.stopPropagation()">
+                          ${(q.attachments || []).map((att, attIdx) => `
+                          <div class="relative group rounded border border-slate-700 overflow-hidden bg-slate-950 aspect-square flex items-center justify-center text-center">
+                            ${att.previewUrl && att.type && att.type.includes('image') ? `
+                              <img src="${att.previewUrl}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                              <a href="${att.previewUrl}" target="_blank" class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition z-10">
+                                <i data-lucide="external-link" class="w-4 h-4 text-white"></i>
+                              </a>
+                            ` : `
+                              <div class="w-full h-full flex flex-col items-center justify-center text-[10px] text-slate-400 p-2 break-all bg-slate-800">
+                                <i data-lucide="file-text" class="w-4 h-4 mb-1"></i>
+                                ${att.name}
+                              </div>
+                            `}
+                            <button onclick="removeQuestionAttachment('${sub.code}', '${q.id}', ${attIdx})" class="absolute top-1 right-1 bg-red-500/90 hover:bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition z-20">
+                              <i data-lucide="x" class="w-3 h-3"></i>
+                            </button>
+                          </div>
+                        `).join('')}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 `;
@@ -563,6 +1439,21 @@
       }
     }
 
+    // UPDATE QUESTION COMMENT
+    function updateQuestionComment(subCode, questionId, value) {
+      for (const section of hsDataStore) {
+        const sub = section.subsections.find(s => s.code === subCode);
+        if (sub) {
+          const q = sub.questions.find(q => q.id === questionId);
+          if (q) {
+            q.comment = value;
+            saveHealthSafetyData();
+            break;
+          }
+        }
+      }
+    }
+
     // UPDATE SEVERITY
     function updateQuestionSeverity(subCode, questionId, value) {
       for (const section of hsDataStore) {
@@ -595,7 +1486,88 @@
       }
     }
 
-    // UPDATE SUBSECTION COMMENT
+    function handleQuestionFileUpload(subCode, qId, files) {
+      if (!files || files.length === 0) return;
+      
+      for (const section of hsDataStore) {
+        const sub = section.subsections.find(s => s.code === subCode);
+        if (sub) {
+          const q = sub.questions.find(q => q.id === qId);
+          if (q) {
+            if (!q.attachments) q.attachments = [];
+            const promises = Array.from(files).map(f => {
+              return new Promise(resolve => {
+                const entry = {
+                  name: f.name,
+                  size: (f.size / 1024).toFixed(1) + ' KB',
+                  type: f.type,
+                  previewUrl: null
+                };
+                if (f.type.startsWith('image/')) {
+                  const reader = new FileReader();
+                  reader.onload = event => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                      const canvas = document.createElement('canvas');
+                      const MAX_SIZE = 1000;
+                      let width = img.width;
+                      let height = img.height;
+                      if (width > height) {
+                        if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                      } else {
+                        if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                      }
+                      canvas.width = width;
+                      canvas.height = height;
+                      const ctx = canvas.getContext('2d');
+                      ctx.drawImage(img, 0, 0, width, height);
+                      entry.previewUrl = canvas.toDataURL('image/jpeg', 0.6);
+                      resolve(entry);
+                    };
+                    img.onerror = () => { entry.previewUrl = event.target.result; resolve(entry); };
+                  };
+                  reader.onerror = () => resolve(entry);
+                  reader.readAsDataURL(f);
+                } else {
+                  resolve(entry);
+                }
+              });
+            });
+
+            Promise.all(promises).then(entries => {
+              entries.forEach(e => q.attachments.push(e));
+              saveHealthSafetyData();
+              renderSubsections();
+            });
+            break;
+          }
+        }
+      }
+    }
+
+    function handleQuestionFileDrop(event, subCode, qId) {
+      if (event.dataTransfer && event.dataTransfer.files) {
+        handleQuestionFileUpload(subCode, qId, event.dataTransfer.files);
+      }
+    }
+
+    function removeQuestionAttachment(subCode, qId, index) {
+      for (const section of hsDataStore) {
+        const sub = section.subsections.find(s => s.code === subCode);
+        if (sub) {
+          const q = sub.questions.find(q => q.id === qId);
+          if (q && q.attachments) {
+            q.attachments.splice(index, 1);
+            saveHealthSafetyData();
+            renderSubsections();
+            break;
+          }
+        }
+      }
+    }
+
+    // REMOVE SUBSECTION ATTACHMENT
     function updateSubComment(subCode, commentText) {
       for (const section of hsDataStore) {
         const sub = section.subsections.find(s => s.code === subCode);
@@ -694,11 +1666,14 @@
       }
     }
 
-    // RECALCULATE HEALTH & SAFETY SCORE (100% Proportional System)
+    // RECALCULATE HEALTH & SAFETY SCORE (Separated by Section)
+    // RECALCULATE HEALTH & SAFETY SCORE (Separated by Section)
     function recalculateHsScore() {
-      let totalQuestions = 0;
-      let applicableQuestions = 0;
-      let earnedPoints = 0;
+      let fabApp = 0, fabEarned = 0;
+      let cutApp = 0, cutEarned = 0;
+      let sewApp = 0, sewEarned = 0;
+      let finApp = 0, finEarned = 0;
+      let chemApp = 0, chemEarned = 0;
       
       let hasMajorOrCritical = false;
       let hasLegalFlag = false;
@@ -706,19 +1681,30 @@
       hsDataStore.forEach(sec => {
         sec.subsections.forEach(sub => {
           sub.questions.forEach(q => {
-            totalQuestions++;
-            
             // Skip N/A questions in the scoring denominator entirely
             if (q.answer !== 'NA' && q.answer !== 'NO APPLICABLE LEGAL REQUIREMENT' && q.answer !== 'UNANSWERED') {
-              applicableQuestions++;
               
-              // Scoring logic
-              if (q.answer === 'YES') {
-                earnedPoints += 1;
-              } else if (q.answer === 'PARTIAL') {
-                earnedPoints += 0.5;
+              let pts = 0;
+              if (q.answer === 'YES') pts = 1;
+              else if (q.answer === 'PARTIAL') pts = 0.5;
+
+              // Assign to the correct section pool
+              if (sec.code === '1.0') {
+                fabApp++;
+                fabEarned += pts;
+              } else if (sec.code === '2.0') {
+                cutApp++;
+                cutEarned += pts;
+              } else if (sec.code === '3.0') {
+                sewApp++;
+                sewEarned += pts;
+              } else if (sec.code === '4.0') {
+                finApp++;
+                finEarned += pts;
+              } else if (sec.code === '5.0') {
+                chemApp++;
+                chemEarned += pts;
               }
-              // 'NO' awards 0 points
 
               // Track Severe Flags
               if (q.severity === 'MAJOR' || q.severity === 'CRITICAL') hasMajorOrCritical = true;
@@ -728,14 +1714,33 @@
         });
       });
 
-      // Calculate final percentage score
-      let scorePct = 100.0;
-      if (applicableQuestions > 0) {
-        scorePct = ((earnedPoints / applicableQuestions) * 100).toFixed(1);
-      }
+      // Calculate final percentage scores
+      let fabPct = fabApp > 0 ? ((fabEarned / fabApp) * 100).toFixed(1) : 100.0;
+      let cutPct = cutApp > 0 ? ((cutEarned / cutApp) * 100).toFixed(1) : 100.0;
+      let sewPct = sewApp > 0 ? ((sewEarned / sewApp) * 100).toFixed(1) : 100.0;
+      let finPct = finApp > 0 ? ((finEarned / finApp) * 100).toFixed(1) : 100.0;
+      let chemPct = chemApp > 0 ? ((chemEarned / chemApp) * 100).toFixed(1) : 100.0;
       
-      document.getElementById('hsScorePercentageText').innerText = `${scorePct}%`;
-      document.getElementById('hsScorePointsSubtext').innerText = `${earnedPoints} / ${applicableQuestions} pts`;
+      // Update UI Elements
+      document.getElementById('hsScoreFabric').innerText = `${fabPct}%`;
+      document.getElementById('hsPtsFabric').innerText = `${fabEarned}/${fabApp} pts`;
+      
+      document.getElementById('hsScoreCutting').innerText = `${cutPct}%`;
+      document.getElementById('hsPtsCutting').innerText = `${cutEarned}/${cutApp} pts`;
+
+      document.getElementById('hsScoreSewing').innerText = `${sewPct}%`;
+      document.getElementById('hsPtsSewing').innerText = `${sewEarned}/${sewApp} pts`;
+
+      document.getElementById('hsScoreFinishing').innerText = `${finPct}%`;
+      document.getElementById('hsPtsFinishing').innerText = `${finEarned}/${finApp} pts`;
+
+      document.getElementById('hsScoreChem').innerText = `${chemPct}%`;
+      document.getElementById('hsPtsChem').innerText = `${chemEarned}/${chemApp} pts`;
+
+      // Base overall status badge on critical flags across all
+      let overallApp = fabApp + cutApp + sewApp + finApp + chemApp;
+      let overallEarned = fabEarned + cutEarned + sewEarned + finEarned + chemEarned;
+      let scorePct = overallApp > 0 ? ((overallEarned / overallApp) * 100).toFixed(1) : 100.0;
 
       const badgeContainer = document.getElementById('hsRatingBadgeContainer');
       const badgeText = document.getElementById('hsRatingBadgeText');
@@ -783,6 +1788,164 @@
       if (window.lucide) {
         lucide.createIcons();
       }
+    }
+
+    // ----------------------------------------------------
+    // PDF REPORT GENERATOR
+    // ----------------------------------------------------
+    function generatePDFReport() {
+      // Create a hidden, printable container
+      const printContainer = document.createElement('div');
+      printContainer.id = 'pdfReportContainer';
+      // Basic styling for the PDF
+      printContainer.style.padding = '40px';
+      printContainer.style.fontFamily = 'Arial, sans-serif';
+      printContainer.style.color = '#1e293b';
+      printContainer.style.backgroundColor = '#ffffff';
+      printContainer.style.width = '800px'; // fixed width for html2pdf
+      
+      // Calculate Stats
+      let totalQuestions = 0;
+      let ncQuestions = [];
+      let criticalCount = 0;
+      let majorCount = 0;
+      let minorCount = 0;
+
+      hsDataStore.forEach(section => {
+        section.subsections.forEach(sub => {
+          sub.questions.forEach(q => {
+            if (q.answer !== 'UNANSWERED') totalQuestions++;
+            
+            // Check for Non-Conformity
+            if (q.answer === 'NO' || q.answer === 'PARTIAL' || (q.severity && q.severity !== 'NONE')) {
+              ncQuestions.push({
+                sectionTitle: section.title,
+                subTitle: sub.title,
+                subCode: sub.code,
+                question: q
+              });
+              
+              if (q.severity === 'CRITICAL') criticalCount++;
+              if (q.severity === 'MAJOR') majorCount++;
+              if (q.severity === 'MINOR') minorCount++;
+            }
+          });
+        });
+      });
+
+      // --- Title Page & Summary ---
+      let html = `
+        <div style="text-align: center; margin-bottom: 40px; border-bottom: 3px solid #0284c7; padding-bottom: 20px;">
+          <h1 style="font-size: 28px; color: #0c4a6e; margin: 0 0 10px 0;">Maliban Wovens</h1>
+          <h2 style="font-size: 22px; color: #0284c7; margin: 0 0 10px 0;">Health & Safety Audit Report</h2>
+          <p style="color: #64748b; font-size: 14px; margin: 0;">Date: ${new Date().toLocaleDateString()}</p>
+        </div>
+        
+        <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 40px;">
+          <h3 style="margin-top: 0; color: #0f172a; font-size: 18px;">Executive Summary</h3>
+          <p style="margin: 5px 0; font-size: 14px;"><strong>Total Questions Audited:</strong> ${totalQuestions}</p>
+          <p style="margin: 5px 0; font-size: 14px;"><strong>Total Non-Conformities (NCs):</strong> ${ncQuestions.length}</p>
+          <div style="display: flex; gap: 20px; margin-top: 15px;">
+            <div style="background-color: #fef2f2; color: #991b1b; padding: 10px; border-radius: 6px; font-weight: bold;">Critical: ${criticalCount}</div>
+            <div style="background-color: #fff7ed; color: #c2410c; padding: 10px; border-radius: 6px; font-weight: bold;">Major: ${majorCount}</div>
+            <div style="background-color: #fefce8; color: #854d0e; padding: 10px; border-radius: 6px; font-weight: bold;">Minor: ${minorCount}</div>
+          </div>
+        </div>
+
+        <h3 style="color: #0f172a; font-size: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 20px;">Detailed Non-Conformities</h3>
+      `;
+
+      if (ncQuestions.length === 0) {
+        html += `<p style="color: #15803d; font-weight: bold;">No non-conformities found. Excellent job!</p>`;
+      } else {
+        // --- Detailed NC Breakdown ---
+        ncQuestions.forEach((item, index) => {
+          let severityColor = '#64748b'; // default
+          if (item.question.severity === 'CRITICAL') severityColor = '#dc2626';
+          if (item.question.severity === 'MAJOR') severityColor = '#ea580c';
+          if (item.question.severity === 'MINOR') severityColor = '#ca8a04';
+
+          html += `
+            <div style="margin-bottom: 30px; page-break-inside: avoid; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+              <div style="background-color: #f1f5f9; padding: 12px 15px; border-bottom: 1px solid #e2e8f0;">
+                <div style="font-size: 12px; color: #475569; font-weight: bold; text-transform: uppercase;">${item.sectionTitle} > ${item.subCode} ${item.subTitle}</div>
+              </div>
+              <div style="padding: 15px;">
+                <div style="font-size: 16px; font-weight: bold; color: #0f172a; margin-bottom: 15px;">
+                  ${item.question.text}
+                </div>
+                
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+                  <tr>
+                    <td style="padding: 8px; border: 1px solid #e2e8f0; background-color: #f8fafc; font-weight: bold; width: 30%;">Answer</td>
+                    <td style="padding: 8px; border: 1px solid #e2e8f0; color: #b91c1c; font-weight: bold;">${item.question.answer}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px; border: 1px solid #e2e8f0; background-color: #f8fafc; font-weight: bold;">Severity</td>
+                    <td style="padding: 8px; border: 1px solid #e2e8f0; color: ${severityColor}; font-weight: bold;">${item.question.severity || 'NONE'}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px; border: 1px solid #e2e8f0; background-color: #f8fafc; font-weight: bold;">Legal Issue</td>
+                    <td style="padding: 8px; border: 1px solid #e2e8f0;">${item.question.legalFlag ? 'YES' : 'NO'}</td>
+                  </tr>
+                </table>
+
+                <div style="background-color: #f8fafc; padding: 10px; border-left: 4px solid #0284c7; margin-bottom: 15px;">
+                  <strong style="display: block; font-size: 12px; color: #64748b; margin-bottom: 5px;">VERIFIER COMMENTS:</strong>
+                  <div style="font-size: 14px; color: #1e293b;">${item.question.comment ? item.question.comment.replace(/\\n/g, '<br>') : '<em>No comments provided.</em>'}</div>
+                </div>
+          `;
+
+          // Embedded Images
+          if (item.question.attachments && item.question.attachments.length > 0) {
+            html += `<div style="margin-top: 15px;">
+              <strong style="display: block; font-size: 12px; color: #64748b; margin-bottom: 10px;">EVIDENCE IMAGES:</strong>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px;">`;
+            
+            item.question.attachments.forEach(att => {
+              if (att.previewUrl) {
+                html += `<img src="${att.previewUrl}" style="max-height: 200px; max-width: 100%; border: 1px solid #cbd5e1; border-radius: 4px;" />`;
+              }
+            });
+
+            html += `</div></div>`;
+          }
+
+          html += `</div></div>`;
+        });
+      }
+
+      printContainer.innerHTML = html;
+      document.body.appendChild(printContainer);
+
+      // Disable buttons during generation
+      const btn = event.currentTarget;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>Generating...</span>`;
+      lucide.createIcons();
+      
+      // Configuration for html2pdf
+      const opt = {
+        margin:       0.5,
+        filename:     `H&S_Audit_Report_${new Date().toISOString().split('T')[0]}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      // Generate PDF
+      html2pdf().set(opt).from(printContainer).save().then(() => {
+        // Cleanup
+        document.body.removeChild(printContainer);
+        btn.innerHTML = originalText;
+        lucide.createIcons();
+      }).catch(err => {
+        console.error("PDF Generation Error: ", err);
+        alert("Failed to generate PDF. Check console for details.");
+        document.body.removeChild(printContainer);
+        btn.innerHTML = originalText;
+        lucide.createIcons();
+      });
     }
   </script>
 </body>
