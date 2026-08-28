@@ -1468,26 +1468,33 @@
     async function syncQuestionToSupabase(sectionCode, q) {
       if (!supabaseClient) return;
       try {
-        const { data } = await supabaseClient.from('audit_questions')
+        const { data, error: selectErr } = await supabaseClient.from('audit_questions')
           .select('id').eq('audit_id', AUDIT_ID).eq('question_code', q.id);
         
+        if (selectErr) console.error("Select error:", selectErr);
+        
+        // Map 'NONE' or 'None' to null to bypass CHECK constraint
+        const dbSeverity = (!q.severity || q.severity.toUpperCase() === 'NONE') ? null : q.severity.toUpperCase();
+
         if (data && data.length > 0) {
-          await supabaseClient.from('audit_questions').update({
+          const { error: updateErr } = await supabaseClient.from('audit_questions').update({
             answer: q.answer,
-            nc_category: q.severity,
+            nc_category: dbSeverity,
             auditor_notes: q.comment
           }).eq('id', data[0].id);
+          if (updateErr) console.error("Update error:", updateErr);
         } else {
-          await supabaseClient.from('audit_questions').insert({
+          const { error: insertErr } = await supabaseClient.from('audit_questions').insert({
             audit_id: AUDIT_ID,
             section_key: sectionCode,
             question_code: q.id,
             question_text: q.text,
             legal_reference: '',
             answer: q.answer,
-            nc_category: q.severity,
+            nc_category: dbSeverity,
             auditor_notes: q.comment || ''
           });
+          if (insertErr) console.error("Insert error:", insertErr);
         }
       } catch (e) {
         console.error('Error syncing question:', e);
