@@ -152,16 +152,26 @@
           </div>
         </div>
 
-        <!-- Right: Action Buttons -->
-        <div class="flex items-center space-x-2">
-          <button onclick="generatePDFReport()" class="px-3.5 py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-1.5 shadow-lg shadow-indigo-600/30 transition">
-            <i data-lucide="download" class="w-4 h-4"></i>
-            <span>Download Report</span>
-          </button>
-          <button onclick="saveHealthSafetyData()" class="px-3.5 py-2 text-xs font-semibold rounded-lg bg-sky-600 hover:bg-sky-500 text-white flex items-center gap-1.5 shadow-lg shadow-sky-600/30 transition">
-            <i data-lucide="save" class="w-4 h-4"></i>
-            <span>Save</span>
-          </button>
+        <!-- Right: Action Buttons & Inputs -->
+        <div class="flex flex-col items-end space-y-2">
+          <div class="flex items-center space-x-2">
+            <input type="date" id="auditDateInput" onchange="handleDateChange()" class="px-2 py-1.5 text-[11px] font-semibold rounded bg-slate-950 border border-slate-700 text-slate-300 focus:outline-none focus:border-sky-500 shadow-inner">
+            <input type="text" id="auditorNameInput" oninput="saveAuditorName(this.value)" value="" class="px-2 py-1.5 text-[11px] font-semibold rounded bg-slate-950 border border-slate-700 text-slate-300 focus:outline-none focus:border-sky-500 w-32 shadow-inner" placeholder="Auditor Name">
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="generatePDFReport()" class="px-3.5 py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-1.5 shadow-lg shadow-indigo-600/30 transition">
+              <i data-lucide="download" class="w-4 h-4"></i>
+              <span>Download Report</span>
+            </button>
+            <button id="btnSaveDraft" onclick="saveAuditData('IN_PROGRESS')" class="px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 text-white flex items-center gap-1.5 shadow-lg shadow-slate-700/30 transition border border-slate-600">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              <span>Save Draft</span>
+            </button>
+            <button id="btnSubmitAudit" onclick="validateAndSubmitAudit()" class="px-3.5 py-2 text-xs font-semibold rounded-lg bg-sky-600 hover:bg-sky-500 text-white flex items-center gap-1.5 shadow-lg shadow-sky-600/30 transition">
+              <i data-lucide="send" class="w-4 h-4"></i>
+              <span>Submit</span>
+            </button>
+          </div>
         </div>
 
       </div>
@@ -212,6 +222,32 @@
       </div>
 
     </main>
+  </div>
+
+  <!-- PDF Preview Modal -->
+  <div id="pdfPreviewModal" class="fixed inset-0 z-50 bg-slate-900/90 backdrop-blur-sm hidden flex-col items-center justify-start overflow-y-auto p-4 sm:p-8">
+    <div class="w-full max-w-4xl bg-white rounded-xl shadow-2xl flex flex-col my-auto relative">
+      <!-- Modal Header -->
+      <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10 rounded-t-xl">
+        <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <i data-lucide="file-search" class="w-5 h-5 text-sky-600"></i>
+          Report Preview
+        </h3>
+        <div class="flex items-center gap-3">
+          <button onclick="closePDFPreview()" class="px-4 py-2 text-sm font-semibold rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 transition">
+            Cancel
+          </button>
+          <button id="btnConfirmDownload" onclick="downloadPDFFromPreview()" class="px-4 py-2 text-sm font-semibold rounded-lg bg-sky-600 hover:bg-sky-500 text-white flex items-center gap-2 transition shadow-lg shadow-sky-600/30">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            Download PDF
+          </button>
+        </div>
+      </div>
+      <!-- Modal Body (Report Content) -->
+      <div id="pdfPreviewContent" class="p-8 bg-white text-slate-900 overflow-x-auto" style="font-family: Arial, sans-serif;">
+        <!-- Rendered Report Goes Here -->
+      </div>
+    </div>
   </div>
 
   <!-- JAVASCRIPT STATE MANAGEMENT & COMPONENT CONTROLLERS -->
@@ -1072,18 +1108,25 @@
     const supabaseUrl = 'https://gekfusjhsayzqcuhmdav.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdla2Z1c2poc2F5enFjdWhtZGF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4ODg2MTMsImV4cCI6MjEwMzQ2NDYxM30.w6aM11iBUOf3iJYZm7zVkQkR6INF1kiRCfZBDxOcwpQ';
     const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-    const AUDIT_ID = '11111111-1111-1111-1111-111111111111'; // Fixed demo audit ID
-
-    // Fallback to local storage for offline resilience
-    const LOCAL_STORAGE_KEY = 'maliban_hs_section_data_v11';
-    let hsDataStore;
-    const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
     
-    if (savedData) {
-      hsDataStore = JSON.parse(savedData);
-    } else {
+    let AUDIT_ID = null;
+    let LOCAL_STORAGE_KEY = '';
+    let hsDataStore;
+    let currentAuditStatus = 'IN_PROGRESS';
+
+    function getTodayString() {
+      const today = new Date();
+      return today.toISOString().split('T')[0];
+    }
+    
+    async function handleDateChange() {
+      const dateInput = document.getElementById('auditDateInput');
+      const selectedDate = dateInput ? dateInput.value : getTodayString();
+      
+      LOCAL_STORAGE_KEY = `maliban_hs_section_data_${selectedDate}`;
+      
+      // Reset store to default
       hsDataStore = JSON.parse(JSON.stringify(HEALTH_SAFETY_DATA));
-      // Set default base values
       hsDataStore.forEach(section => {
         section.subsections.forEach(sub => {
           sub.questions.forEach(q => {
@@ -1094,48 +1137,145 @@
           });
         });
       });
+
+      // Try local storage first as base
+      const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (savedData) {
+        try { hsDataStore = JSON.parse(savedData); } catch(e){}
+      }
+      
+      await initializeData(selectedDate);
     }
 
-    async function initializeData() {
-      try {
-        console.log("Fetching responses from Supabase...");
-        
-        // Ensure the audit record exists
-        await supabaseClient.from('audits').upsert({ id: AUDIT_ID, auditor_name: 'Demo User', status: 'IN_PROGRESS' }, { onConflict: 'id' }).select();
+    function generateUUID() {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+      }
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
 
-        const { data: responses, error } = await supabaseClient
-          .from('audit_questions')
-          .select('*')
-          .eq('audit_id', AUDIT_ID);
-          
-        if (error) throw error;
-        
-        if (responses && responses.length > 0) {
-          // Map DB responses back to the hardcoded UI structure
-          hsDataStore.forEach(section => {
+    async function syncStaticQuestions() {
+      try {
+        const { count, error: countErr } = await supabaseClient.from('questions').select('*', { count: 'exact', head: true });
+        if (count === 0) {
+          console.log('Static questions table is empty. Seeding from frontend HEALTH_SAFETY_DATA...');
+          const payload = [];
+          HEALTH_SAFETY_DATA.forEach(section => {
             section.subsections.forEach(sub => {
               sub.questions.forEach(q => {
-                const dbRes = responses.find(r => r.question_code === q.id);
-                if (dbRes) {
-                  q.answer = dbRes.answer || 'UNANSWERED';
-                  q.severity = dbRes.nc_category || 'NONE';
-                  q.comment = dbRes.auditor_notes || '';
-                  if (q.answer === 'NA' || q.answer === 'NO APPLICABLE LEGAL REQUIREMENT') {
-                    q.severity = 'NONE';
-                    q.legalFlag = false;
-                  }
-                }
+                payload.push({
+                  id: q.id,
+                  section_key: section.code,
+                  question_text: q.text,
+                  legal_reference: '',
+                  max_points: 10
+                });
               });
             });
           });
+          const { error: insErr } = await supabaseClient.from('questions').insert(payload);
+          if (insErr) console.error('Failed to seed questions:', insErr);
+          else console.log('Successfully seeded questions table.');
+        }
+      } catch (err) {
+        console.error('Error syncing static questions', err);
+      }
+    }
+
+    async function initializeData(selectedDate) {
+      try {
+        console.log("Fetching audit for date:", selectedDate);
+        
+        // Ensure static questions exist
+        await syncStaticQuestions();
+        
+        // Query Supabase for an existing audit on this date
+        const { data: existingAudit, error: auditErr } = await supabaseClient
+          .from('audits')
+          .select('id, status, auditor_name')
+          .eq('audit_date', selectedDate)
+          .eq('facility_name', 'Maliban Wovens (Pvt) Ltd')
+          .limit(1)
+          .maybeSingle();
+
+        if (existingAudit) {
+          console.log("Found existing audit:", existingAudit.id);
+          AUDIT_ID = existingAudit.id;
+          currentAuditStatus = existingAudit.status;
+          
+          const auditorInput = document.getElementById('auditorNameInput');
+          if (auditorInput && existingAudit.auditor_name) {
+            auditorInput.value = existingAudit.auditor_name;
+          }
+
+          const { data: responses, error } = await supabaseClient
+            .from('audit_responses')
+            .select('*')
+            .eq('audit_id', AUDIT_ID);
+            
+          if (error) throw error;
+          
+          if (responses && responses.length > 0) {
+            // Map DB responses back to the hardcoded UI structure
+            hsDataStore.forEach(section => {
+              section.subsections.forEach(sub => {
+                sub.questions.forEach(q => {
+                  const dbRes = responses.find(r => r.question_id === q.id);
+                  if (dbRes) {
+                    q.answer = dbRes.answer || 'UNANSWERED';
+                    q.severity = dbRes.nc_category || 'NONE';
+                    q.comment = dbRes.auditor_notes || '';
+                    q.capaText = dbRes.capa_text || '';
+                    q.capaDeadline = dbRes.capa_deadline || '';
+                    q.responsiblePerson = dbRes.responsible_person || '';
+                    if (q.answer === 'NA' || q.answer === 'NO APPLICABLE LEGAL REQUIREMENT') {
+                      q.severity = 'NONE';
+                      q.legalFlag = false;
+                    }
+                  }
+                });
+              });
+            });
+          }
+        } else {
+          console.log("No existing audit found for this date. Starting fresh.");
+          AUDIT_ID = generateUUID();
+          currentAuditStatus = 'IN_PROGRESS';
         }
       } catch (err) {
         console.error("Error loading responses from Supabase. Falling back to local storage.", err);
       } finally {
+        updateUILockState();
         renderSidebarNav();
         renderSubsections();
         recalculateHsScore();
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+    }
+
+    function updateUILockState() {
+      const btnDraft = document.getElementById('btnSaveDraft');
+      const btnSubmit = document.getElementById('btnSubmitAudit');
+      if (currentAuditStatus === 'SUBMITTED') {
+        if(btnDraft) btnDraft.style.display = 'none';
+        if(btnSubmit) {
+          btnSubmit.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i><span>Submitted</span>`;
+          btnSubmit.disabled = true;
+          btnSubmit.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+      } else {
+        if(btnDraft) {
+          btnDraft.style.display = 'flex';
+          btnDraft.disabled = false;
+        }
+        if(btnSubmit) {
+          btnSubmit.innerHTML = `<i data-lucide="send" class="w-4 h-4"></i><span>Submit</span>`;
+          btnSubmit.disabled = false;
+          btnSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
       }
     }
 
@@ -1144,16 +1284,44 @@
     let expandedSidebarSections = ['1.0'];
 
     function toggleSidebarSection(secCode) {
-      if (expandedSidebarSections.includes(secCode)) {
-        expandedSidebarSections = expandedSidebarSections.filter(c => c !== secCode);
-      } else {
+      const isExpanding = !expandedSidebarSections.includes(secCode);
+      
+      if (isExpanding) {
         expandedSidebarSections.push(secCode);
+        // Auto-select the first subsection of this section
+        const section = hsDataStore.find(s => s.code === secCode);
+        if (section && section.subsections.length > 0) {
+          scrollToSubsection(section.subsections[0].code);
+          return; // scrollToSubsection calls renderSidebarNav internally
+        }
+      } else {
+        expandedSidebarSections = expandedSidebarSections.filter(c => c !== secCode);
       }
+      
       renderSidebarNav();
     }
 
+    function saveAuditorName(name) {
+      localStorage.setItem('hs_auditor_name', name);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-      initializeData();
+      const dateInput = document.getElementById('auditDateInput');
+      if (dateInput && !dateInput.value) {
+        dateInput.value = getTodayString();
+      }
+      
+      const auditorNameInput = document.getElementById('auditorNameInput');
+      if (auditorNameInput) {
+        const savedName = localStorage.getItem('hs_auditor_name');
+        if (savedName) {
+          auditorNameInput.value = savedName;
+        } else {
+          auditorNameInput.value = "Demo User";
+        }
+      }
+
+      handleDateChange();
     });
 
     // RENDER SIDEBAR NAVIGATION
@@ -1210,18 +1378,23 @@
 
             const btn = document.createElement('button');
             btn.onclick = () => scrollToSubsection(sub.code);
-            btn.className = `w-full text-left px-3 py-2 rounded-xl transition flex items-center justify-between text-xs border ${
+            
+            const pct = Math.round((subAnswered / subTotal) * 100);
+            const progressColor = isComplete ? 'bg-emerald-500/20' : (subAnswered > 0 ? 'bg-amber-500/20' : 'bg-transparent');
+
+            btn.className = `relative w-full text-left px-3 py-2 rounded-xl transition flex items-center justify-between text-xs overflow-hidden border ${
               isActive 
                 ? 'bg-sky-950/80 border-sky-500/60 font-bold text-sky-300 shadow-md' 
                 : 'bg-slate-900/40 border-transparent text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 hover:border-slate-700/50'
             }`;
 
             btn.innerHTML = `
-              <span class="flex items-center gap-2 truncate">
+              <div class="absolute inset-y-0 left-0 ${progressColor} transition-all duration-500" style="width: ${pct}%"></div>
+              <span class="flex items-center gap-2 truncate relative z-10">
                 <span class="px-1.5 py-0.5 rounded ${isActive ? 'bg-sky-900/50' : 'bg-slate-950'} text-[10px] font-mono ${isActive ? 'text-sky-200' : 'text-slate-500'} border ${isActive ? 'border-sky-800/50' : 'border-slate-800'}">${sub.code}</span>
                 <span class="truncate">${sub.title}</span>
               </span>
-              <span class="text-[10px] ${isComplete ? 'text-emerald-400 font-bold' : 'text-slate-500'}">${subAnswered}/${subTotal}</span>
+              <span class="text-[10px] relative z-10 ${isComplete ? 'text-emerald-400 font-bold' : (subAnswered > 0 ? 'text-amber-400 font-bold' : 'text-slate-500')}">${subAnswered}/${subTotal}</span>
             `;
 
             subContainer.appendChild(btn);
@@ -1302,6 +1475,7 @@
                       </div>
                       <div class="shrink-0 flex items-center">
                         <select onchange="updateQuestionAnswer('${sub.code}', '${q.id}', this.value)" class="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-sky-300 text-xs font-bold focus:outline-none focus:border-sky-500 shadow">
+                          <option value="UNANSWERED" ${q.answer === 'UNANSWERED' || !q.answer ? 'selected' : ''} disabled>Select Answer...</option>
                           <option value="YES" ${q.answer === 'YES' ? 'selected' : ''}>YES</option>
                           <option value="PARTIAL" ${q.answer === 'PARTIAL' ? 'selected' : ''}>PARTIAL</option>
                           <option value="NO" ${q.answer === 'NO' ? 'selected' : ''}>NO</option>
@@ -1340,11 +1514,51 @@
                         <i data-lucide="message-square" class="w-3 h-3"></i> Verifier Comments
                       </label>
                       <textarea 
-                        onchange="updateQuestionComment('${sub.code}', '${q.id}', this.value)"
+                        oninput="updateQuestionComment('${sub.code}', '${q.id}', this.value)"
                         rows="2" 
                         placeholder="Add specific comments or findings for this question..."
                         class="w-full p-2 rounded-lg bg-slate-950 border border-slate-700 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 text-[11px]"
                       >${q.comment || ''}</textarea>
+                    </div>
+                    
+                    <!-- CAPA Section -->
+                    <div class="mt-3 pt-3 border-t border-slate-800/50 flex flex-col md:flex-row gap-4">
+                      <!-- Responsible Person -->
+                      <div class="flex-1">
+                        <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1.5 flex items-center gap-1.5">
+                          <i data-lucide="user" class="w-3 h-3"></i> Responsible Person
+                        </label>
+                        <input type="text"
+                          oninput="updateQuestionCapaResponsible('${sub.code}', '${q.id}', this.value)"
+                          placeholder="e.g. John Doe"
+                          class="w-full p-2 rounded-lg bg-slate-950 border border-slate-700 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-sky-500 text-[11px]"
+                          value="${q.responsiblePerson || ''}"
+                        >
+                      </div>
+                      <!-- CAPA Deadline -->
+                      <div class="w-full md:w-40 shrink-0">
+                        <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1.5 flex items-center gap-1.5">
+                          <i data-lucide="calendar" class="w-3 h-3"></i> CAPA Deadline
+                        </label>
+                        <input type="date"
+                          onclick="this.showPicker && this.showPicker()"
+                          onchange="updateQuestionCapaDeadline('${sub.code}', '${q.id}', this.value)"
+                          class="w-full p-2 rounded-lg bg-slate-950 border border-slate-700 text-slate-200 focus:outline-none focus:border-sky-500 text-[11px] cursor-pointer"
+                          value="${q.capaDeadline || ''}"
+                        >
+                      </div>
+                    </div>
+                    <!-- CAPA Text -->
+                    <div class="mt-3">
+                      <label class="block text-[10px] uppercase font-bold text-slate-400 mb-1.5 flex items-center gap-1.5">
+                        <i data-lucide="shield-alert" class="w-3 h-3"></i> Corrective Action Plan
+                      </label>
+                      <textarea 
+                        oninput="updateQuestionCapaText('${sub.code}', '${q.id}', this.value)"
+                        rows="2" 
+                        placeholder="Detail the required corrective and preventive actions..."
+                        class="w-full p-2 rounded-lg bg-slate-950 border border-slate-700 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-sky-500 text-[11px]"
+                      >${q.capaText || ''}</textarea>
                     </div>
                     <!-- Question-Level Attachments -->
                     <div class="mt-3 pt-3 border-t border-slate-800/50">
@@ -1464,42 +1678,7 @@
       lucide.createIcons();
     }
 
-    // SUPABASE QUESTION SYNC HELPER
-    async function syncQuestionToSupabase(sectionCode, q) {
-      if (!supabaseClient) return;
-      try {
-        const { data, error: selectErr } = await supabaseClient.from('audit_questions')
-          .select('id').eq('audit_id', AUDIT_ID).eq('question_code', q.id);
-        
-        if (selectErr) console.error("Select error:", selectErr);
-        
-        // Map 'NONE' or 'None' to null to bypass CHECK constraint
-        const dbSeverity = (!q.severity || q.severity.toUpperCase() === 'NONE') ? null : q.severity.toUpperCase();
-
-        if (data && data.length > 0) {
-          const { error: updateErr } = await supabaseClient.from('audit_questions').update({
-            answer: q.answer,
-            nc_category: dbSeverity,
-            auditor_notes: q.comment
-          }).eq('id', data[0].id);
-          if (updateErr) console.error("Update error:", updateErr);
-        } else {
-          const { error: insertErr } = await supabaseClient.from('audit_questions').insert({
-            audit_id: AUDIT_ID,
-            section_key: sectionCode,
-            question_code: q.id,
-            question_text: q.text,
-            legal_reference: '',
-            answer: q.answer,
-            nc_category: dbSeverity,
-            auditor_notes: q.comment || ''
-          });
-          if (insertErr) console.error("Insert error:", insertErr);
-        }
-      } catch (e) {
-        console.error('Error syncing question:', e);
-      }
-    }
+    // (Deprecated) auto-sync helper removed
 
     // UPDATE QUESTION ANSWER (AND CONDITIONALLY RESET FLAGS)
     function updateQuestionAnswer(subCode, questionId, value) {
@@ -1514,8 +1693,7 @@
               q.severity = 'NONE';
               q.legalFlag = false;
             }
-            saveHealthSafetyData();
-            syncQuestionToSupabase(section.code, q);
+            saveLocalState();
             recalculateHsScore();
             renderSubsections(); // Re-render to correctly hide/show the flags block
             renderSidebarNav();
@@ -1533,8 +1711,7 @@
           const q = sub.questions.find(q => q.id === questionId);
           if (q) {
             q.comment = value;
-            saveHealthSafetyData();
-            syncQuestionToSupabase(section.code, q);
+            saveLocalState();
             break;
           }
         }
@@ -1549,8 +1726,7 @@
           const q = sub.questions.find(q => q.id === questionId);
           if (q) {
             q.severity = value;
-            saveHealthSafetyData();
-            syncQuestionToSupabase(section.code, q);
+            saveLocalState();
             recalculateHsScore();
             break;
           }
@@ -1558,21 +1734,43 @@
       }
     }
 
-    // UPDATE LEGAL FLAG
-    function updateQuestionLegalFlag(subCode, questionId, value) {
+    // GENERIC STATE UPDATER
+    function updateField(subCode, questionId, fieldName, value) {
       for (const section of hsDataStore) {
         const sub = section.subsections.find(s => s.code === subCode);
         if (sub) {
           const q = sub.questions.find(q => q.id === questionId);
           if (q) {
-            q.legalFlag = value;
-            saveHealthSafetyData();
-            syncQuestionToSupabase(section.code, q);
-            recalculateHsScore();
+            q[fieldName] = value;
+            saveLocalState();
+            if (fieldName === 'answer' || fieldName === 'severity' || fieldName === 'legalFlag') {
+              recalculateHsScore();
+            }
             break;
           }
         }
       }
+    }
+
+    // UPDATE HANDLERS
+    function updateQuestionLegalFlag(subCode, qId, value) {
+      updateField(subCode, qId, 'legalFlag', value);
+    }
+    
+    function updateQuestionComment(subCode, qId, value) {
+      updateField(subCode, qId, 'comment', value);
+    }
+    
+    function updateQuestionCapaResponsible(subCode, qId, value) {
+      updateField(subCode, qId, 'responsiblePerson', value);
+    }
+
+    function updateQuestionCapaDeadline(subCode, qId, value) {
+      updateField(subCode, qId, 'capaDeadline', value);
+    }
+
+    function updateQuestionCapaText(subCode, qId, value) {
+      updateField(subCode, qId, 'capaText', value);
     }
 
     function handleQuestionFileUpload(subCode, qId, files) {
@@ -1745,19 +1943,131 @@
       }
     }
 
-    // SAVE TO LOCAL STORAGE & SYNC AUDIT STATUS
-    async function saveHealthSafetyData() {
+    function saveLocalState() {
       try {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(hsDataStore));
+      } catch (e) {
+        console.error('Storage limit reached!', e);
+      }
+    }
+
+    function validateAndSubmitAudit() {
+      let missingQuestions = [];
+
+      hsDataStore.forEach(section => {
+        section.subsections.forEach(sub => {
+          sub.questions.forEach(q => {
+            if (q.answer === 'UNANSWERED') {
+              missingQuestions.push(`[${sub.code}] ${sub.title} - ${q.text}`);
+            }
+          });
+        });
+      });
+
+      if (missingQuestions.length > 0) {
+        const maxDisplay = 10;
+        let msg = "Validation Failed! Please answer the following questions before submitting:\n\n";
+        msg += missingQuestions.slice(0, maxDisplay).join('\n');
+        if (missingQuestions.length > maxDisplay) {
+          msg += `\n...and ${missingQuestions.length - maxDisplay} more.`;
+        }
+        alert(msg);
+        return;
+      }
+
+      saveAuditData('SUBMITTED');
+    }
+
+    async function saveAuditData(status) {
+      const btnDraft = document.getElementById('btnSaveDraft');
+      const btnSubmit = document.getElementById('btnSubmitAudit');
+      if (btnDraft) btnDraft.disabled = true;
+      if (btnSubmit) btnSubmit.disabled = true;
+      
+      const originalDraftText = btnDraft ? btnDraft.innerHTML : '';
+      const originalSubmitText = btnSubmit ? btnSubmit.innerHTML : '';
+      
+      if (btnDraft && status === 'IN_PROGRESS') btnDraft.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Saving...`;
+      if (btnSubmit && status === 'SUBMITTED') btnSubmit.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Submitting...`;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+
+      try {
+        saveLocalState();
         
-        // Sync overall audit status to Supabase if client is initialized
         if (typeof supabaseClient !== 'undefined') {
-          console.log('Syncing audit status to Supabase...');
-          await supabaseClient.from('audits').upsert({ id: AUDIT_ID, auditor_name: 'Demo User', status: 'IN_PROGRESS' }, { onConflict: 'id' });
+          // 1. Fetch all existing question IDs for this audit to distinguish inserts vs updates
+          const { data: existingQ, error: fetchErr } = await supabaseClient.from('audit_responses')
+            .select('id, question_id').eq('audit_id', AUDIT_ID);
+          
+          if (fetchErr) throw fetchErr;
+
+          const insertPayload = [];
+          const updatePayload = [];
+
+          hsDataStore.forEach(section => {
+            section.subsections.forEach(sub => {
+              sub.questions.forEach(q => {
+                const dbSeverity = (!q.severity || q.severity.toUpperCase() === 'NONE') ? null : q.severity.toUpperCase();
+                
+                const existing = existingQ ? existingQ.find(ex => ex.question_id === q.id) : null;
+                
+                const record = {
+                  audit_id: AUDIT_ID,
+                  question_id: q.id,
+                  answer: q.answer,
+                  nc_category: dbSeverity,
+                  auditor_notes: q.comment || '',
+                  capa_text: q.capaText || '',
+                  capa_deadline: q.capaDeadline || null,
+                  responsible_person: q.responsiblePerson || ''
+                };
+
+                if (existing) {
+                  record.id = existing.id;
+                  updatePayload.push(record);
+                } else {
+                  insertPayload.push(record);
+                }
+              });
+            });
+          });
+
+          // 2. Update audit status (Must be done FIRST to avoid foreign key constraints)
+          const selectedDate = document.getElementById('auditDateInput').value;
+          const auditorName = document.getElementById('auditorNameInput').value || 'Unknown Auditor';
+          
+          const { error: auditErr } = await supabaseClient.from('audits')
+            .upsert({ 
+              id: AUDIT_ID, 
+              auditor_name: auditorName, 
+              audit_date: selectedDate,
+              status: status 
+            }, { onConflict: 'id' });
+          
+          if (auditErr) throw auditErr;
+
+          // 3. Perform bulk operations on questions
+          if (insertPayload.length > 0) {
+            const { error: insErr } = await supabaseClient.from('audit_responses').insert(insertPayload);
+            if (insErr) throw insErr;
+          }
+          if (updatePayload.length > 0) {
+            const { error: updErr } = await supabaseClient.from('audit_responses').upsert(updatePayload);
+            if (updErr) throw updErr;
+          }
+          
+          currentAuditStatus = status;
+          updateUILockState();
+          
+          alert(status === 'SUBMITTED' ? "Audit submitted successfully!" : "Draft saved successfully!");
         }
       } catch (e) {
-        console.error('Storage limit reached or sync failed!', e);
-        alert('Warning: Your local storage is full or network failed.');
+        console.error('Save failed!', e);
+        alert("Error saving data: " + e.message);
+      } finally {
+        if (btnDraft) { btnDraft.disabled = false; btnDraft.innerHTML = originalDraftText; }
+        if (btnSubmit) { btnSubmit.disabled = false; btnSubmit.innerHTML = originalSubmitText; }
+        if (typeof lucide !== 'undefined') lucide.createIcons();
       }
     }
 
@@ -1889,16 +2199,9 @@
     // PDF REPORT GENERATOR
     // ----------------------------------------------------
     function generatePDFReport() {
-      // Create a hidden, printable container
-      const printContainer = document.createElement('div');
-      printContainer.id = 'pdfReportContainer';
-      // Basic styling for the PDF
-      printContainer.style.padding = '40px';
-      printContainer.style.fontFamily = 'Arial, sans-serif';
-      printContainer.style.color = '#1e293b';
-      printContainer.style.backgroundColor = '#ffffff';
-      printContainer.style.width = '800px'; // fixed width for html2pdf
-      
+      const auditorName = document.getElementById('auditorNameInput') ? document.getElementById('auditorNameInput').value : 'Demo User';
+      const auditDate = document.getElementById('auditDateInput') ? document.getElementById('auditDateInput').value : new Date().toLocaleDateString();
+
       // Calculate Stats
       let totalQuestions = 0;
       let ncQuestions = [];
@@ -1928,12 +2231,15 @@
         });
       });
 
-      // --- Title Page & Summary ---
+      // --- Part A: Title Page & Executive Summary ---
       let html = `
         <div style="text-align: center; margin-bottom: 40px; border-bottom: 3px solid #0284c7; padding-bottom: 20px;">
-          <h1 style="font-size: 28px; color: #0c4a6e; margin: 0 0 10px 0;">Maliban Wovens</h1>
+          <h1 style="font-size: 26px; color: #0c4a6e; margin: 0 0 10px 0;">Maliban Wovens (Pvt) Ltd - Balangoda</h1>
           <h2 style="font-size: 22px; color: #0284c7; margin: 0 0 10px 0;">Health & Safety Audit Report</h2>
-          <p style="color: #64748b; font-size: 14px; margin: 0;">Date: ${new Date().toLocaleDateString()}</p>
+          <div style="color: #64748b; font-size: 14px; margin: 0; display: flex; justify-content: center; gap: 30px;">
+            <span><strong>Date:</strong> ${auditDate}</span>
+            <span><strong>Auditor:</strong> ${auditorName}</span>
+          </div>
         </div>
         
         <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 40px;">
@@ -1951,7 +2257,7 @@
       `;
 
       if (ncQuestions.length === 0) {
-        html += `<p style="color: #15803d; font-weight: bold;">No non-conformities found. Excellent job!</p>`;
+        html += `<p style="color: #15803d; font-weight: bold; margin-bottom: 50px;">No non-conformities found. Excellent job!</p>`;
       } else {
         // --- Detailed NC Breakdown ---
         ncQuestions.forEach((item, index) => {
@@ -1986,8 +2292,13 @@
                 </table>
 
                 <div style="background-color: #f8fafc; padding: 10px; border-left: 4px solid #0284c7; margin-bottom: 15px;">
-                  <strong style="display: block; font-size: 12px; color: #64748b; margin-bottom: 5px;">VERIFIER COMMENTS:</strong>
-                  <div style="font-size: 14px; color: #1e293b;">${item.question.comment ? item.question.comment.replace(/\\n/g, '<br>') : '<em>No comments provided.</em>'}</div>
+                  <strong style="display: block; font-size: 12px; color: #64748b; margin-bottom: 5px;">VERIFIER COMMENTS & CAPA:</strong>
+                  <div style="font-size: 14px; color: #1e293b; margin-bottom: 8px;"><strong>Comment:</strong> ${item.question.comment ? item.question.comment.replace(/\n/g, '<br>') : '<em>No comments provided.</em>'}</div>
+                  <div style="font-size: 14px; color: #1e293b; margin-bottom: 8px;"><strong>CAPA:</strong> ${item.question.capaText ? item.question.capaText.replace(/\n/g, '<br>') : '<em>None</em>'}</div>
+                  <div style="font-size: 12px; color: #475569;">
+                    <span style="margin-right: 15px;"><strong>Responsible:</strong> ${item.question.responsiblePerson || 'N/A'}</span>
+                    <span><strong>Deadline:</strong> ${item.question.capaDeadline || 'N/A'}</span>
+                  </div>
                 </div>
           `;
 
@@ -2010,34 +2321,152 @@
         });
       }
 
-      printContainer.innerHTML = html;
-      document.body.appendChild(printContainer);
+      // --- Part B: Complete Audit Details ---
+      html += `
+        <div style="page-break-before: always;"></div>
+        <h2 style="font-size: 24px; color: #0f172a; border-bottom: 3px solid #0284c7; padding-bottom: 10px; margin-bottom: 30px;">Complete Audit Details</h2>
+      `;
 
-      // Disable buttons during generation
-      const btn = event.currentTarget;
+      hsDataStore.forEach(section => {
+        let secAnswered = 0;
+        let secTotal = 0;
+        
+        section.subsections.forEach(sub => {
+          secTotal += sub.questions.length;
+          secAnswered += sub.questions.filter(q => q.answer && q.answer !== 'UNANSWERED').length;
+        });
+        
+        if (secTotal === 0) return; // Skip empty sections
+
+        html += `
+          <div style="background-color: #0c4a6e; color: white; padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; page-break-inside: avoid;">
+            <h3 style="margin: 0; font-size: 18px;">${section.code} ${section.title}</h3>
+            <span style="font-size: 14px; font-weight: normal; background-color: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 4px;">Completed: ${secAnswered}/${secTotal}</span>
+          </div>
+        `;
+
+        section.subsections.forEach(sub => {
+          let subAnswered = sub.questions.filter(q => q.answer && q.answer !== 'UNANSWERED').length;
+          if (sub.questions.length === 0) return;
+
+          html += `
+            <div style="margin-left: 20px; margin-bottom: 30px;">
+              <div style="background-color: #f1f5f9; padding: 10px 15px; border-left: 4px solid #0284c7; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; page-break-inside: avoid;">
+                <h4 style="margin: 0; font-size: 16px; color: #0f172a;">${sub.code} ${sub.title}</h4>
+                <span style="font-size: 12px; color: #475569; font-weight: bold;">${subAnswered}/${sub.questions.length}</span>
+              </div>
+              
+              <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <thead>
+                  <tr style="background-color: #e2e8f0; text-align: left;">
+                    <th style="padding: 10px; border: 1px solid #cbd5e1; width: 60%;">Question</th>
+                    <th style="padding: 10px; border: 1px solid #cbd5e1; width: 20%;">Answer</th>
+                    <th style="padding: 10px; border: 1px solid #cbd5e1; width: 20%;">Severity</th>
+                  </tr>
+                </thead>
+                <tbody>
+          `;
+
+          sub.questions.forEach((q, qIdx) => {
+            let answerColor = '#64748b'; // UNANSWERED
+            if (q.answer === 'YES') answerColor = '#15803d'; // Green
+            if (q.answer === 'PARTIAL') answerColor = '#ca8a04'; // Yellow
+            if (q.answer === 'NO') answerColor = '#b91c1c'; // Red
+            if (q.answer === 'NA') answerColor = '#64748b'; // Gray
+
+            html += `
+              <tr style="page-break-inside: avoid;">
+                <td style="padding: 10px; border: 1px solid #cbd5e1; font-size: 14px;">
+                  <span style="font-weight: bold; color: #475569; margin-right: 8px;">${sub.code}.${qIdx+1}</span>
+                  ${q.text}
+                </td>
+                <td style="padding: 10px; border: 1px solid #cbd5e1; font-size: 14px; font-weight: bold; color: ${answerColor};">${q.answer || 'UNANSWERED'}</td>
+                <td style="padding: 10px; border: 1px solid #cbd5e1; font-size: 14px;">${q.severity || 'NONE'}</td>
+              </tr>
+            `;
+
+            // If there's comments/CAPA or images, insert a row directly below it spanning all columns
+            const hasNotes = q.comment || q.capaText || (q.attachments && q.attachments.length > 0);
+            if (hasNotes) {
+              html += `
+                <tr style="page-break-inside: avoid; background-color: #f8fafc;">
+                  <td colspan="3" style="padding: 10px 20px; border: 1px solid #cbd5e1;">
+                    ${q.comment ? `<div style="font-size: 13px; color: #334155; margin-bottom: 5px;"><strong>Comment:</strong> ${q.comment.replace(/\n/g, '<br>')}</div>` : ''}
+                    ${q.capaText ? `<div style="font-size: 13px; color: #334155; margin-bottom: 5px;"><strong>CAPA:</strong> ${q.capaText.replace(/\n/g, '<br>')} (Resp: ${q.responsiblePerson || 'N/A'} | Due: ${q.capaDeadline || 'N/A'})</div>` : ''}
+              `;
+
+              if (q.attachments && q.attachments.length > 0) {
+                html += `<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">`;
+                q.attachments.forEach(att => {
+                  if (att.previewUrl) {
+                    html += `<img src="${att.previewUrl}" style="height: 60px; border: 1px solid #cbd5e1; border-radius: 4px;" />`;
+                  }
+                });
+                html += `</div>`;
+              }
+
+              html += `</td></tr>`;
+            }
+          });
+
+          html += `
+                </tbody>
+              </table>
+            </div>
+          `;
+        });
+      });
+
+      // Store the generated HTML globally so downloadPDFFromPreview can use it directly as a string
+      window.lastGeneratedPDFHtml = `
+        <div style="font-family: Arial, sans-serif; color: #1e293b; background-color: #ffffff; padding: 20px; width: 800px; max-width: 100%; margin: 0 auto;">
+          ${html}
+        </div>
+      `;
+
+      // Show the Preview Modal
+      const previewModal = document.getElementById('pdfPreviewModal');
+      const previewContent = document.getElementById('pdfPreviewContent');
+      previewContent.innerHTML = html;
+      
+      previewModal.classList.remove('hidden');
+      previewModal.classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closePDFPreview() {
+      const previewModal = document.getElementById('pdfPreviewModal');
+      previewModal.classList.remove('flex');
+      previewModal.classList.add('hidden');
+    }
+
+    function downloadPDFFromPreview() {
+      const btn = document.getElementById('btnConfirmDownload');
       const originalText = btn.innerHTML;
       btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>Generating...</span>`;
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
+
+      if (!window.lastGeneratedPDFHtml) {
+        alert("Report data not found. Please close and generate again.");
+        return;
+      }
       
-      // Configuration for html2pdf
       const opt = {
         margin:       0.5,
         filename:     `H&S_Audit_Report_${new Date().toISOString().split('T')[0]}.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+        pagebreak:    { mode: 'css', before: '#nextpage1' }
       };
 
-      // Generate PDF
-      html2pdf().set(opt).from(printContainer).save().then(() => {
-        // Cleanup
-        document.body.removeChild(printContainer);
+      html2pdf().set(opt).from(window.lastGeneratedPDFHtml).save().then(() => {
         btn.innerHTML = originalText;
-        lucide.createIcons();
+        if (window.lucide) lucide.createIcons();
+        closePDFPreview();
       }).catch(err => {
         console.error("PDF Generation Error: ", err);
         alert("Failed to generate PDF. Check console for details.");
-        document.body.removeChild(printContainer);
         btn.innerHTML = originalText;
         lucide.createIcons();
       });
