@@ -127,6 +127,11 @@ VALUES ('audit_evidence', 'audit_evidence', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Storage Bucket Policies
+DROP POLICY IF EXISTS "Public Uploads" ON storage.objects;
+DROP POLICY IF EXISTS "Public Views" ON storage.objects;
+DROP POLICY IF EXISTS "Public Updates" ON storage.objects;
+DROP POLICY IF EXISTS "Public Deletes" ON storage.objects;
+
 CREATE POLICY "Public Uploads" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'audit_evidence');
 CREATE POLICY "Public Views" ON storage.objects FOR SELECT USING (bucket_id = 'audit_evidence');
 CREATE POLICY "Public Updates" ON storage.objects FOR UPDATE USING (bucket_id = 'audit_evidence');

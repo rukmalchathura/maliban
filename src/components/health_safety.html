@@ -1660,10 +1660,15 @@
                         class="border-2 border-dashed border-slate-700 hover:border-slate-500 rounded-lg p-3 text-center transition-colors cursor-pointer relative"
                         onclick="document.getElementById('file-input-${q.id}').click()"
                       >
-                        <p class="text-[10px] text-slate-400 font-medium pointer-events-none ${q.attachments && q.attachments.length > 0 ? 'hidden' : 'block'}">Drag & Drop files here, or click to browse</p>
+                        <p class="text-[10px] text-slate-400 font-medium pointer-events-none ${q.attachments && q.attachments.length > 0 && !q.isUploading ? 'hidden' : 'block'}">
+                          ${q.isUploading 
+                            ? '<i data-lucide="loader" class="w-4 h-4 animate-spin mx-auto mb-1 text-sky-400 inline-block"></i> <span class="text-sky-300 ml-1">Uploading...</span>'
+                            : 'Drag & Drop files here, or click to browse'
+                          }
+                        </p>
                         
                         <!-- Attachment List -->
-                        <div id="q-attachments-${q.id}" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 ${q.attachments && q.attachments.length > 0 ? 'mt-2' : ''} pointer-events-auto" onclick="event.stopPropagation()">
+                        <div id="q-attachments-${q.id}" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 ${q.attachments && q.attachments.length > 0 ? 'mt-2' : ''} ${q.isUploading ? 'opacity-50' : ''} pointer-events-auto" onclick="event.stopPropagation()">
                           ${(q.attachments || []).map((att, attIdx) => `
                           <div class="relative group rounded border border-slate-700 overflow-hidden bg-slate-950 aspect-square flex items-center justify-center text-center">
                             ${att.previewUrl && att.type && att.type.includes('image') ? `
@@ -1859,6 +1864,9 @@
         if (sub) {
           const q = sub.questions.find(q => q.id === qId);
           if (q) {
+            q.isUploading = true;
+            renderSubsections();
+            
             if (!q.attachments) q.attachments = [];
             const promises = Array.from(files).map(f => {
               return new Promise(async resolve => {
@@ -1877,18 +1885,23 @@
 
                 // Upload directly to Supabase Storage
                 if (typeof supabaseClient !== 'undefined') {
-                   const { data, error } = await supabaseClient.storage
-                     .from('audit_evidence')
-                     .upload(filePath, f);
-                   
-                   if (!error) {
-                     const { data: pubData } = supabaseClient.storage
+                   try {
+                     const { data, error } = await supabaseClient.storage
                        .from('audit_evidence')
-                       .getPublicUrl(filePath);
-                     entry.fileUrl = pubData.publicUrl;
-                   } else {
-                     console.error("Storage upload error:", error);
-                     alert("Failed to upload " + f.name + " to cloud storage.");
+                       .upload(filePath, f);
+                     
+                     if (!error) {
+                       const { data: pubData } = supabaseClient.storage
+                         .from('audit_evidence')
+                         .getPublicUrl(filePath);
+                       entry.fileUrl = pubData.publicUrl;
+                     } else {
+                       console.error("Storage upload error:", error);
+                       alert("Please run the schema.sql update in Supabase! Upload failed for: " + f.name);
+                     }
+                   } catch (uploadException) {
+                     console.error("Storage upload exception:", uploadException);
+                     alert("Please run the schema.sql update in Supabase! Upload exception for: " + f.name);
                    }
                 }
 
@@ -1949,6 +1962,7 @@
             });
 
             Promise.all(promises).then(entries => {
+              q.isUploading = false;
               entries.forEach(e => q.attachments.push(e));
               saveHealthSafetyData();
               renderSubsections();
