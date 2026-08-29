@@ -78,6 +78,56 @@
     .toggle-checkbox:checked + .toggle-label {
       background-color: #ef4444;
     }
+
+    /* NATIVE PDF PRINT STYLING */
+    @media print {
+      /* Reset html/body to allow endless pagination */
+      html, body {
+        height: auto !important;
+        min-height: auto !important;
+        overflow: visible !important;
+        position: static !important;
+        background-color: white !important;
+      }
+      
+      /* Hide the main application UI completely */
+      header, .flex-1 {
+        display: none !important;
+      }
+
+      /* Transform the modal from a fixed overlay into a standard document block */
+      #pdfPreviewModal {
+        position: static !important;
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      /* Hide the modal's header and buttons */
+      #pdfPreviewModal > div > div:first-child, button {
+        display: none !important;
+      }
+
+      /* Ensure the report content flows naturally across pages */
+      #pdfPreviewContent {
+        position: static !important;
+        height: auto !important;
+        overflow: visible !important;
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      /* Table pagination helpers */
+      table { page-break-inside: auto !important; }
+      tr    { page-break-inside: avoid !important; page-break-after: auto !important; }
+      thead { display: table-header-group !important; }
+    }
   </style>
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -237,7 +287,7 @@
           <button onclick="closePDFPreview()" class="px-4 py-2 text-sm font-semibold rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 transition">
             Cancel
           </button>
-          <button id="btnConfirmDownload" onclick="downloadPDFFromPreview()" class="px-4 py-2 text-sm font-semibold rounded-lg bg-sky-600 hover:bg-sky-500 text-white flex items-center gap-2 transition shadow-lg shadow-sky-600/30">
+          <button id="btnConfirmDownload" onclick="window.print()" class="px-4 py-2 text-sm font-semibold rounded-lg bg-sky-600 hover:bg-sky-500 text-white flex items-center gap-2 transition shadow-lg shadow-sky-600/30">
             <i data-lucide="download" class="w-4 h-4"></i>
             Download PDF
           </button>
@@ -1678,8 +1728,6 @@
       lucide.createIcons();
     }
 
-    // (Deprecated) auto-sync helper removed
-
     // UPDATE QUESTION ANSWER (AND CONDITIONALLY RESET FLAGS)
     function updateQuestionAnswer(subCode, questionId, value) {
       for (const section of hsDataStore) {
@@ -2072,7 +2120,6 @@
     }
 
     // RECALCULATE HEALTH & SAFETY SCORE (Separated by Section)
-    // RECALCULATE HEALTH & SAFETY SCORE (Separated by Section)
     function recalculateHsScore() {
       let fabApp = 0, fabEarned = 0;
       let cutApp = 0, cutEarned = 0;
@@ -2417,13 +2464,6 @@
         });
       });
 
-      // Store the generated HTML globally so downloadPDFFromPreview can use it directly as a string
-      window.lastGeneratedPDFHtml = `
-        <div style="font-family: Arial, sans-serif; color: #1e293b; background-color: #ffffff; padding: 20px; width: 800px; max-width: 100%; margin: 0 auto;">
-          ${html}
-        </div>
-      `;
-
       // Show the Preview Modal
       const previewModal = document.getElementById('pdfPreviewModal');
       const previewContent = document.getElementById('pdfPreviewContent');
@@ -2438,38 +2478,6 @@
       const previewModal = document.getElementById('pdfPreviewModal');
       previewModal.classList.remove('flex');
       previewModal.classList.add('hidden');
-    }
-
-    function downloadPDFFromPreview() {
-      const btn = document.getElementById('btnConfirmDownload');
-      const originalText = btn.innerHTML;
-      btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>Generating...</span>`;
-      if (window.lucide) lucide.createIcons();
-
-      if (!window.lastGeneratedPDFHtml) {
-        alert("Report data not found. Please close and generate again.");
-        return;
-      }
-      
-      const opt = {
-        margin:       0.5,
-        filename:     `H&S_Audit_Report_${new Date().toISOString().split('T')[0]}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
-        pagebreak:    { mode: 'css', before: '#nextpage1' }
-      };
-
-      html2pdf().set(opt).from(window.lastGeneratedPDFHtml).save().then(() => {
-        btn.innerHTML = originalText;
-        if (window.lucide) lucide.createIcons();
-        closePDFPreview();
-      }).catch(err => {
-        console.error("PDF Generation Error: ", err);
-        alert("Failed to generate PDF. Check console for details.");
-        btn.innerHTML = originalText;
-        lucide.createIcons();
-      });
     }
   </script>
 </body>
