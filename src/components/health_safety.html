@@ -131,6 +131,13 @@
   </style>
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- PDF.js for PDF thumbnail generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script>
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    }
+  </script>
 </head>
 <body class="min-h-screen flex flex-col antialiased selection:bg-sky-500 selection:text-white">
 
@@ -1268,7 +1275,16 @@
             
           if (error) throw error;
           
+          let attachments = [];
           if (responses && responses.length > 0) {
+            const responseIds = responses.map(r => r.id);
+            const { data: attData, error: attErr } = await supabaseClient
+              .from('question_attachments')
+              .select('*')
+              .in('response_id', responseIds);
+            
+            if (attData && !attErr) attachments = attData;
+            
             // Map DB responses back to the hardcoded UI structure
             hsDataStore.forEach(section => {
               section.subsections.forEach(sub => {
@@ -1284,6 +1300,20 @@
                     if (q.answer === 'NA' || q.answer === 'NO APPLICABLE LEGAL REQUIREMENT') {
                       q.severity = 'NONE';
                       q.legalFlag = false;
+                    }
+                    
+                    const qAtts = attachments.filter(a => a.response_id === dbRes.id);
+                    if (qAtts.length > 0) {
+                      q.attachments = qAtts.map(a => ({
+                        name: a.file_name,
+                        size: (a.file_size / 1024).toFixed(1) + ' KB',
+                        fileSizeRaw: a.file_size,
+                        type: a.file_type,
+                        fileUrl: a.file_url,
+                        previewUrl: a.preview_url || a.file_url
+                      }));
+                    } else {
+                      q.attachments = [];
                     }
                   }
                 });
@@ -1831,13 +1861,37 @@
           if (q) {
             if (!q.attachments) q.attachments = [];
             const promises = Array.from(files).map(f => {
-              return new Promise(resolve => {
+              return new Promise(async resolve => {
+                const fileExt = f.name.split('.').pop();
+                const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+                const filePath = `${AUDIT_ID}/${qId}/${fileName}`;
+
                 const entry = {
                   name: f.name,
                   size: (f.size / 1024).toFixed(1) + ' KB',
+                  fileSizeRaw: f.size,
                   type: f.type,
-                  previewUrl: null
+                  previewUrl: null,
+                  fileUrl: null
                 };
+
+                // Upload directly to Supabase Storage
+                if (typeof supabaseClient !== 'undefined') {
+                   const { data, error } = await supabaseClient.storage
+                     .from('audit_evidence')
+                     .upload(filePath, f);
+                   
+                   if (!error) {
+                     const { data: pubData } = supabaseClient.storage
+                       .from('audit_evidence')
+                       .getPublicUrl(filePath);
+                     entry.fileUrl = pubData.publicUrl;
+                   } else {
+                     console.error("Storage upload error:", error);
+                     alert("Failed to upload " + f.name + " to cloud storage.");
+                   }
+                }
+
                 if (f.type.startsWith('image/')) {
                   const reader = new FileReader();
                   reader.onload = event => {
@@ -1864,6 +1918,30 @@
                   };
                   reader.onerror = () => resolve(entry);
                   reader.readAsDataURL(f);
+                } else if (f.type === 'application/pdf') {
+                  if (typeof pdfjsLib !== 'undefined') {
+                    const reader = new FileReader();
+                    reader.onload = async event => {
+                      try {
+                        const pdfData = new Uint8Array(event.target.result);
+                        const pdf = await pdfjsLib.getDocument({data: pdfData}).promise;
+                        const page = await pdf.getPage(1);
+                        const viewport = page.getViewport({scale: 1.5});
+                        const canvas = document.createElement('canvas');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+                        await page.render({canvasContext: canvas.getContext('2d'), viewport: viewport}).promise;
+                        entry.previewUrl = canvas.toDataURL('image/jpeg', 0.8);
+                      } catch (err) {
+                        console.error("PDF thumbnail error:", err);
+                      }
+                      resolve(entry);
+                    };
+                    reader.onerror = () => resolve(entry);
+                    reader.readAsArrayBuffer(f);
+                  } else {
+                    resolve(entry);
+                  }
                 } else {
                   resolve(entry);
                 }
@@ -2094,14 +2172,56 @@
           
           if (auditErr) throw auditErr;
 
-          // 3. Perform bulk operations on questions
+          // 3. Perform bulk operations on questions and capture results
+          let savedResponses = [];
+
           if (insertPayload.length > 0) {
-            const { error: insErr } = await supabaseClient.from('audit_responses').insert(insertPayload);
+            const { data, error: insErr } = await supabaseClient.from('audit_responses').insert(insertPayload).select();
             if (insErr) throw insErr;
+            if (data) savedResponses.push(...data);
           }
           if (updatePayload.length > 0) {
-            const { error: updErr } = await supabaseClient.from('audit_responses').upsert(updatePayload);
+            const { data, error: updErr } = await supabaseClient.from('audit_responses').upsert(updatePayload).select();
             if (updErr) throw updErr;
+            if (data) savedResponses.push(...data);
+          }
+          
+          // 4. Save Attachments
+          if (savedResponses.length > 0) {
+            const responseIds = savedResponses.map(r => r.id);
+            // Clear old attachments for these questions
+            await supabaseClient.from('question_attachments').delete().in('response_id', responseIds);
+
+            const attachmentsPayload = [];
+            
+            hsDataStore.forEach(section => {
+              section.subsections.forEach(sub => {
+                sub.questions.forEach(q => {
+                  if (q.attachments && q.attachments.length > 0) {
+                    const dbRes = savedResponses.find(r => r.question_id === q.id);
+                    if (dbRes) {
+                      q.attachments.forEach(att => {
+                        if (att.fileUrl) {
+                           attachmentsPayload.push({
+                             response_id: dbRes.id,
+                             file_name: att.name,
+                             file_type: att.type,
+                             file_size: att.fileSizeRaw || 0,
+                             file_url: att.fileUrl,
+                             preview_url: att.previewUrl || ''
+                           });
+                        }
+                      });
+                    }
+                  }
+                });
+              });
+            });
+
+            if (attachmentsPayload.length > 0) {
+              const { error: attErr } = await supabaseClient.from('question_attachments').insert(attachmentsPayload);
+              if (attErr) throw attErr;
+            }
           }
           
           currentAuditStatus = status;
@@ -2134,11 +2254,22 @@
         sec.subsections.forEach(sub => {
           sub.questions.forEach(q => {
             // Skip N/A questions in the scoring denominator entirely
-            if (q.answer !== 'NA' && q.answer !== 'NO APPLICABLE LEGAL REQUIREMENT' && q.answer !== 'UNANSWERED') {
+            if (q.answer !== 'NA' && q.answer !== 'NO APPLICABLE LEGAL REQUIREMENT') {
               
               let pts = 0;
-              if (q.answer === 'YES') pts = 1;
-              else if (q.answer === 'PARTIAL') pts = 0.5;
+              if (q.answer === 'YES') {
+                pts = 1;
+              } else if (q.answer === 'PARTIAL') {
+                if (q.severity === 'CRITICAL') pts = 0;
+                else if (q.severity === 'MAJOR') pts = 0.25;
+                else if (q.severity === 'MINOR') pts = 0.5;
+                else pts = 0.75; // NONE or unset
+              } else if (q.answer === 'NO') {
+                if (q.severity === 'CRITICAL' || q.severity === 'MAJOR') pts = 0;
+                else if (q.severity === 'MINOR') pts = 0.25;
+                else pts = 0.5; // NONE or unset
+              }
+              // If UNANSWERED, pts remains 0
 
               // Assign to the correct section pool
               if (sec.code === '1.0') {
@@ -2166,12 +2297,12 @@
         });
       });
 
-      // Calculate final percentage scores
-      let fabPct = fabApp > 0 ? ((fabEarned / fabApp) * 100).toFixed(1) : 100.0;
-      let cutPct = cutApp > 0 ? ((cutEarned / cutApp) * 100).toFixed(1) : 100.0;
-      let sewPct = sewApp > 0 ? ((sewEarned / sewApp) * 100).toFixed(1) : 100.0;
-      let finPct = finApp > 0 ? ((finEarned / finApp) * 100).toFixed(1) : 100.0;
-      let chemPct = chemApp > 0 ? ((chemEarned / chemApp) * 100).toFixed(1) : 100.0;
+      // Calculate final percentage scores (defaults to 0.0% if no applicable questions exist)
+      let fabPct = fabApp > 0 ? ((fabEarned / fabApp) * 100).toFixed(1) : 0.0;
+      let cutPct = cutApp > 0 ? ((cutEarned / cutApp) * 100).toFixed(1) : 0.0;
+      let sewPct = sewApp > 0 ? ((sewEarned / sewApp) * 100).toFixed(1) : 0.0;
+      let finPct = finApp > 0 ? ((finEarned / finApp) * 100).toFixed(1) : 0.0;
+      let chemPct = chemApp > 0 ? ((chemEarned / chemApp) * 100).toFixed(1) : 0.0;
       
       // Update UI Elements
       document.getElementById('hsScoreFabric').innerText = `${fabPct}%`;
@@ -2249,6 +2380,18 @@
       const auditorName = document.getElementById('auditorNameInput') ? document.getElementById('auditorNameInput').value : 'Demo User';
       const auditDate = document.getElementById('auditDateInput') ? document.getElementById('auditDateInput').value : new Date().toLocaleDateString();
 
+      // Read current scores from UI
+      const fabPct = document.getElementById('hsScoreFabric') ? document.getElementById('hsScoreFabric').innerText : '0.0%';
+      const fabPts = document.getElementById('hsPtsFabric') ? document.getElementById('hsPtsFabric').innerText : '0/0 pts';
+      const cutPct = document.getElementById('hsScoreCutting') ? document.getElementById('hsScoreCutting').innerText : '0.0%';
+      const cutPts = document.getElementById('hsPtsCutting') ? document.getElementById('hsPtsCutting').innerText : '0/0 pts';
+      const sewPct = document.getElementById('hsScoreSewing') ? document.getElementById('hsScoreSewing').innerText : '0.0%';
+      const sewPts = document.getElementById('hsPtsSewing') ? document.getElementById('hsPtsSewing').innerText : '0/0 pts';
+      const finPct = document.getElementById('hsScoreFinishing') ? document.getElementById('hsScoreFinishing').innerText : '0.0%';
+      const finPts = document.getElementById('hsPtsFinishing') ? document.getElementById('hsPtsFinishing').innerText : '0/0 pts';
+      const chemPct = document.getElementById('hsScoreChem') ? document.getElementById('hsScoreChem').innerText : '0.0%';
+      const chemPts = document.getElementById('hsPtsChem') ? document.getElementById('hsPtsChem').innerText : '0/0 pts';
+
       // Calculate Stats
       let totalQuestions = 0;
       let ncQuestions = [];
@@ -2297,6 +2440,35 @@
             <div style="background-color: #fef2f2; color: #991b1b; padding: 10px; border-radius: 6px; font-weight: bold;">Critical: ${criticalCount}</div>
             <div style="background-color: #fff7ed; color: #c2410c; padding: 10px; border-radius: 6px; font-weight: bold;">Major: ${majorCount}</div>
             <div style="background-color: #fefce8; color: #854d0e; padding: 10px; border-radius: 6px; font-weight: bold;">Minor: ${minorCount}</div>
+          </div>
+          
+          <h4 style="margin-top: 25px; margin-bottom: 10px; color: #0f172a; font-size: 16px;">Section Scores</h4>
+          <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+            <div style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 15px; background: white; text-align: center; min-width: 120px;">
+              <div style="font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase;">Fabric Stores</div>
+              <div style="font-size: 20px; font-weight: 900; color: #6366f1;">${fabPct}</div>
+              <div style="font-size: 11px; color: #94a3b8;">${fabPts}</div>
+            </div>
+            <div style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 15px; background: white; text-align: center; min-width: 120px;">
+              <div style="font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase;">Cutting Dept</div>
+              <div style="font-size: 20px; font-weight: 900; color: #a855f7;">${cutPct}</div>
+              <div style="font-size: 11px; color: #94a3b8;">${cutPts}</div>
+            </div>
+            <div style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 15px; background: white; text-align: center; min-width: 120px;">
+              <div style="font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase;">Sewing Dept</div>
+              <div style="font-size: 20px; font-weight: 900; color: #ec4899;">${sewPct}</div>
+              <div style="font-size: 11px; color: #94a3b8;">${sewPts}</div>
+            </div>
+            <div style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 15px; background: white; text-align: center; min-width: 120px;">
+              <div style="font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase;">Finishing Dept</div>
+              <div style="font-size: 20px; font-weight: 900; color: #10b981;">${finPct}</div>
+              <div style="font-size: 11px; color: #94a3b8;">${finPts}</div>
+            </div>
+            <div style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 15px; background: white; text-align: center; min-width: 120px;">
+              <div style="font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase;">Chem Stores</div>
+              <div style="font-size: 20px; font-weight: 900; color: #f43f5e;">${chemPct}</div>
+              <div style="font-size: 11px; color: #94a3b8;">${chemPts}</div>
+            </div>
           </div>
         </div>
 
@@ -2406,9 +2578,10 @@
               <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                 <thead>
                   <tr style="background-color: #e2e8f0; text-align: left;">
-                    <th style="padding: 10px; border: 1px solid #cbd5e1; width: 60%;">Question</th>
-                    <th style="padding: 10px; border: 1px solid #cbd5e1; width: 20%;">Answer</th>
-                    <th style="padding: 10px; border: 1px solid #cbd5e1; width: 20%;">Severity</th>
+                    <th style="padding: 10px; border: 1px solid #cbd5e1; width: 55%;">Question</th>
+                    <th style="padding: 10px; border: 1px solid #cbd5e1; width: 15%;">Answer</th>
+                    <th style="padding: 10px; border: 1px solid #cbd5e1; width: 15%;">Severity</th>
+                    <th style="padding: 10px; border: 1px solid #cbd5e1; width: 15%;">Legal</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -2429,6 +2602,7 @@
                 </td>
                 <td style="padding: 10px; border: 1px solid #cbd5e1; font-size: 14px; font-weight: bold; color: ${answerColor};">${q.answer || 'UNANSWERED'}</td>
                 <td style="padding: 10px; border: 1px solid #cbd5e1; font-size: 14px;">${q.severity || 'NONE'}</td>
+                <td style="padding: 10px; border: 1px solid #cbd5e1; font-size: 14px; color: ${q.legalFlag ? '#b91c1c' : '#64748b'}; font-weight: ${q.legalFlag ? 'bold' : 'normal'};">${q.legalFlag ? 'YES' : 'NO'}</td>
               </tr>
             `;
 
@@ -2437,16 +2611,21 @@
             if (hasNotes) {
               html += `
                 <tr style="page-break-inside: avoid; background-color: #f8fafc;">
-                  <td colspan="3" style="padding: 10px 20px; border: 1px solid #cbd5e1;">
+                  <td colspan="4" style="padding: 10px 20px; border: 1px solid #cbd5e1;">
                     ${q.comment ? `<div style="font-size: 13px; color: #334155; margin-bottom: 5px;"><strong>Comment:</strong> ${q.comment.replace(/\n/g, '<br>')}</div>` : ''}
                     ${q.capaText ? `<div style="font-size: 13px; color: #334155; margin-bottom: 5px;"><strong>CAPA:</strong> ${q.capaText.replace(/\n/g, '<br>')} (Resp: ${q.responsiblePerson || 'N/A'} | Due: ${q.capaDeadline || 'N/A'})</div>` : ''}
               `;
 
               if (q.attachments && q.attachments.length > 0) {
-                html += `<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">`;
+                html += `<div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px; padding: 10px; background-color: #f1f5f9; border-radius: 8px;">`;
                 q.attachments.forEach(att => {
                   if (att.previewUrl) {
-                    html += `<img src="${att.previewUrl}" style="height: 60px; border: 1px solid #cbd5e1; border-radius: 4px;" />`;
+                    html += `
+                      <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <img src="${att.previewUrl}" style="max-height: 250px; max-width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);" />
+                        <span style="font-size: 11px; color: #64748b; font-family: monospace;">${att.name}</span>
+                      </div>
+                    `;
                   }
                 });
                 html += `</div>`;

@@ -77,6 +77,7 @@ CREATE TABLE IF NOT EXISTS public.question_attachments (
     file_type VARCHAR(100) NOT NULL,
     file_size INTEGER NOT NULL,
     file_url TEXT NOT NULL,
+    preview_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
@@ -118,3 +119,15 @@ CREATE POLICY "Public Responses Update" ON public.audit_responses FOR UPDATE USI
 
 CREATE POLICY "Public Attachments Select" ON public.question_attachments FOR SELECT USING (true);
 CREATE POLICY "Public Attachments Insert" ON public.question_attachments FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public Attachments Delete" ON public.question_attachments FOR DELETE USING (true);
+
+-- Storage Bucket Setup for Audit Evidence
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('audit_evidence', 'audit_evidence', true) 
+ON CONFLICT (id) DO NOTHING;
+
+-- Storage Bucket Policies
+CREATE POLICY "Public Uploads" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'audit_evidence');
+CREATE POLICY "Public Views" ON storage.objects FOR SELECT USING (bucket_id = 'audit_evidence');
+CREATE POLICY "Public Updates" ON storage.objects FOR UPDATE USING (bucket_id = 'audit_evidence');
+CREATE POLICY "Public Deletes" ON storage.objects FOR DELETE USING (bucket_id = 'audit_evidence');
