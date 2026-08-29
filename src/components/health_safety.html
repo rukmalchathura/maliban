@@ -1870,6 +1870,7 @@
             if (!q.attachments) q.attachments = [];
             const promises = Array.from(files).map(f => {
               return new Promise(async resolve => {
+               try {
                 const fileExt = f.name.split('.').pop();
                 const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
                 const filePath = `${AUDIT_ID}/${qId}/${fileName}`;
@@ -1958,6 +1959,10 @@
                 } else {
                   resolve(entry);
                 }
+               } catch (err) {
+                 console.error("Unhandled error in upload promise:", err);
+                 resolve({ name: f.name || 'Unknown', type: f.type, previewUrl: null, fileUrl: null });
+               }
               });
             });
 
@@ -1965,6 +1970,10 @@
               q.isUploading = false;
               entries.forEach(e => q.attachments.push(e));
               saveHealthSafetyData();
+              renderSubsections();
+            }).catch(err => {
+              console.error("Promise.all failed:", err);
+              q.isUploading = false;
               renderSubsections();
             });
             break;
@@ -2263,6 +2272,11 @@
       
       let hasMajorOrCritical = false;
       let hasLegalFlag = false;
+      
+      let criticalCount = 0;
+      let majorCount = 0;
+      let minorCount = 0;
+      let legalCount = 0;
 
       hsDataStore.forEach(sec => {
         sec.subsections.forEach(sub => {
@@ -2306,6 +2320,11 @@
               // Track Severe Flags
               if (q.severity === 'MAJOR' || q.severity === 'CRITICAL') hasMajorOrCritical = true;
               if (q.legalFlag === true) hasLegalFlag = true;
+              
+              if (q.severity === 'CRITICAL') criticalCount++;
+              if (q.severity === 'MAJOR') majorCount++;
+              if (q.severity === 'MINOR') minorCount++;
+              if (q.legalFlag) legalCount++;
             }
           });
         });
@@ -2342,39 +2361,53 @@
       const badgeContainer = document.getElementById('hsRatingBadgeContainer');
       const badgeText = document.getElementById('hsRatingBadgeText');
 
+      let flagsHtml = '';
+      if (criticalCount > 0 || majorCount > 0 || minorCount > 0 || legalCount > 0) {
+        flagsHtml = `
+          <div class="flex items-center gap-1.5 mt-2 pt-1 border-t border-red-500/20 text-[9px] font-mono opacity-90 w-full">
+            ${criticalCount > 0 ? `<span class="bg-red-500/30 px-1 rounded border border-red-500/50">${criticalCount} CRIT</span>` : ''}
+            ${majorCount > 0 ? `<span class="bg-red-500/20 px-1 rounded border border-red-500/30">${majorCount} MAJ</span>` : ''}
+            ${minorCount > 0 ? `<span class="bg-amber-500/20 text-amber-200 px-1 rounded border border-amber-500/30">${minorCount} MIN</span>` : ''}
+            ${legalCount > 0 ? `<span class="bg-rose-500/20 text-rose-200 px-1 rounded border border-rose-500/30">${legalCount} LGL</span>` : ''}
+          </div>
+        `;
+      }
+
       // Update Header Compliance Status based on Findings
       if (hasMajorOrCritical || hasLegalFlag || scorePct < 70) {
         badgeContainer.className = 'px-4 py-2 rounded-xl border flex items-center space-x-3 transition-all duration-300 bg-red-950/60 border-red-500/40 text-red-300';
         badgeText.innerText = hasMajorOrCritical ? 'CRITICAL RISK' : 'ACTION REQUIRED';
         badgeContainer.innerHTML = `
-          <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
+          <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center shrink-0">
             <i data-lucide="shield-alert" class="w-5 h-5 text-red-400"></i>
           </div>
-          <div>
+          <div class="flex-1 flex flex-col justify-center">
             <div class="text-[10px] uppercase tracking-wider font-semibold opacity-80">H&amp;S Compliance Status</div>
             <div id="hsRatingBadgeText" class="text-sm font-bold tracking-wide text-red-300">${badgeText.innerText}</div>
+            ${flagsHtml}
           </div>
         `;
       } else if (scorePct < 100) {
         badgeContainer.className = 'px-4 py-2 rounded-xl border flex items-center space-x-3 transition-all duration-300 bg-amber-950/60 border-amber-500/40 text-amber-300';
         badgeText.innerText = 'NEEDS IMPROVEMENT';
         badgeContainer.innerHTML = `
-          <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0">
             <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-400"></i>
           </div>
-          <div>
+          <div class="flex-1 flex flex-col justify-center">
             <div class="text-[10px] uppercase tracking-wider font-semibold opacity-80">H&amp;S Compliance Status</div>
             <div id="hsRatingBadgeText" class="text-sm font-bold tracking-wide text-amber-300">${badgeText.innerText}</div>
+            ${flagsHtml}
           </div>
         `;
       } else {
         badgeContainer.className = 'px-4 py-2 rounded-xl border flex items-center space-x-3 transition-all duration-300 bg-emerald-950/60 border-emerald-500/40 text-emerald-300';
         badgeText.innerText = 'COMPLIANT';
         badgeContainer.innerHTML = `
-          <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0">
             <i data-lucide="shield-check" class="w-5 h-5 text-emerald-400"></i>
           </div>
-          <div>
+          <div class="flex-1 flex flex-col justify-center">
             <div class="text-[10px] uppercase tracking-wider font-semibold opacity-80">H&amp;S Compliance Status</div>
             <div id="hsRatingBadgeText" class="text-sm font-bold tracking-wide text-emerald-300">COMPLIANT</div>
           </div>
